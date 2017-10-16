@@ -181,18 +181,16 @@ def calendario():
     for dia in dias_da_semana:
         cardapio_atual = filtro_dicionarios(jdata, 'dia_semana', dia)
         cardapio_anterior = filtro_dicionarios(jdata_anterior, 'dia_semana', dia)
+        depara = db_functions.select_all()
+        depara = [x[3:5] for x in depara if x[1] == 'TEMPEROS' and x[2] == 'INGREDIENTES']
 
         if cardapio_atual and cardapio_anterior:
-            for (k, v) in cardapio_atual['cardapio'].items():
-                cardapio_atual['cardapio'][k] = replace_cardapio(v)
             cardapio_atual['cardapio_semana_anterior'] = cardapio_anterior['cardapio']
             cardapios.append(cardapio_atual)
 
         else:
 
             if cardapio_atual:
-                for (k, v) in cardapio_atual['cardapio'].items():
-                    cardapio_atual['cardapio'][k] = replace_cardapio(v)
                 cardapio_atual['cardapio_semana_anterior'] = []
                 cardapios.append(cardapio_atual)
 
@@ -222,7 +220,8 @@ def calendario():
                                tipo_atendimento=args['tipo_atendimento'],
                                tipo_unidade=args['tipo_unidade'],
                                idade=args['idade'],
-                               agrupamento=args['agrupamento'])
+                               agrupamento=args['agrupamento'],
+                               depara=depara)
 
 
 @app.route("/visualizador_cardapio", methods=["GET"])

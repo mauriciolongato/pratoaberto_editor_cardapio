@@ -113,6 +113,7 @@
             <span type="button" class="btn btn-lg btn-default disabled" id="tipo_unidade">{{ tipo_unidade }}</span>
             <span type="button" class="btn btn-lg btn-default disabled" id="idade">{{ idade }}</span>
             <span type="button" class="btn btn-lg btn-default disabled" id="agrupamento">{{ agrupamento }}</span>
+            <span type="button" onclick='substituir()' class="btn btn-primary pull-right" id="de-para">APLICAR DE-PARA</span>
         </div>
 
         <!-- Acrescentar a tabela para o calendario -->
@@ -174,18 +175,6 @@
             </div>
         </div>
     </div>
-    <!-- Formata a data em cima do calendario -->
-    <!--<script type="text/javascript">
-        $("body").ready(function() {
-            $("td.data-dia").on('blur', function() {
-                console.log(
-                    $("div.active").attr('id') + ' - ' + $(this).attr('id') + ' - ' + $(this).text());
-            });
-            $("td.data-dia").each(function() {
-                $(this).attr('day',$(this).attr('id'));
-            });
-        });
-    </script>-->
 
     <!-- Mantem a aba selecionada mesmo depois de mudar de data -->
     <script>
@@ -272,13 +261,15 @@
     <!-- Substitui palavras da lista de alimentos por receita -->
     <script>
         function substituir() {
-            var DE = document.getElementById("DE").value;
-            var PARA = document.getElementById("PARA").value;
-
-            $('#task-table tr').each(function() {
-                var ingredientes = $($(this).children('td')[4]).text();
-                var ingredientes = ingredientes.replace(DE, PARA);
-                $($(this).children('td')[4]).html(ingredientes);
+            var lista_depara = {{ depara|tojson|safe }};
+            $.each(lista_depara, function(index, value) {
+                var DE = value[0];
+                var PARA = value[1];
+                $('#task-table tr').each(function() {
+                    var ingredientes = $($(this).children('td')[4]).text();
+                    var ingredientes = ingredientes.replace(DE, PARA);
+                    $($(this).children('td')[4]).html(ingredientes);
+                });
             });
         }
     </script>

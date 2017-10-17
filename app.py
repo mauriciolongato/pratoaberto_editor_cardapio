@@ -89,7 +89,7 @@ def upload_file():
                                 else:
                                     cardapio.update({
                                             'cardapio_original': {k:list(map(str.strip, v.split(','))) for(k, v) in v5.items()},
-                                            'cardapio': {k:list(map(str.strip, replace_cardapio(v).split(','))) for(k, v) in v5.items()},
+                                            'cardapio': {k:list(map(str.strip, v.split(','))) for(k, v) in v5.items()},
                                             'status': 'PENDENTE'
                                         })
                                     json_list.append(cardapio)

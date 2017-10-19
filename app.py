@@ -11,12 +11,13 @@ import cardapio_xml_para_dict as xmldict
 import db_setup
 import db_functions
 
-
 app = Flask(__name__)
 
 ip_teste_vitor = 'http://192.168.0.195:8000'
 ip_homolog = 'https://pratoaberto.tk/api'
 api = 'https://pratoaberto.tk/api'
+
+
 # api = ip_teste_vitor
 
 @app.route("/", methods=["GET", "POST"])
@@ -76,7 +77,8 @@ def upload_file():
                                     args = (api,
                                             data,
                                             '&'.join(['%s=%s' % item for item in query.items()]),
-                                            '&'.join(['status=%s' % item for item in ['PUBLICADO', 'SALVO', 'PENDENTE']]))
+                                            '&'.join(
+                                                ['status=%s' % item for item in ['PUBLICADO', 'SALVO', 'PENDENTE']]))
                                     responses[_key] = requests.get('{}/cardapios/{}?{}&{}'.format(*args)).json()
 
                                 cardapio = query
@@ -88,10 +90,11 @@ def upload_file():
                                     })
                                 else:
                                     cardapio.update({
-                                            'cardapio_original': {k:list(map(str.strip, v.split(','))) for(k, v) in v5.items()},
-                                            'cardapio': {k:list(map(str.strip, v.split(','))) for(k, v) in v5.items()},
-                                            'status': 'PENDENTE'
-                                        })
+                                        'cardapio_original': {k: list(map(str.strip, v.split(','))) for (k, v) in
+                                                              v5.items()},
+                                        'cardapio': {k: list(map(str.strip, v.split(','))) for (k, v) in v5.items()},
+                                        'status': 'PENDENTE'
+                                    })
                                     json_list.append(cardapio)
 
                                 cardapios_preview.append(cardapio)
@@ -99,7 +102,8 @@ def upload_file():
             json_dump = json.dumps(json_list)
         except:
             cardapios_preview, json_dump = [], {}
-        return render_template("preview_json.html", filename=filename, cardapios_preview=cardapios_preview, json_dump=json_dump)
+        return render_template("preview_json.html", filename=filename, cardapios_preview=cardapios_preview,
+                               json_dump=json_dump)
 
 
 @app.route('/cria_terceirizada', methods=['GET'])
@@ -122,15 +126,17 @@ def cria_terceirizada():
 def atualiza_cardapio():
     headers = {'Content-type': 'application/json'}
     data = request.form.get('json_dump', request.data)
-    r = requests.post(api+'/cardapios', data=data, headers=headers)
+    r = requests.post(api + '/cardapios', data=data, headers=headers)
 
     if request.form:
-        return(redirect(url_for('backlog')))
+        return (redirect(url_for('backlog')))
     else:
         return ('', 200)
 
 
 comments = []
+
+
 @app.route("/calendario", methods=["GET"])
 def calendario():
     args = request.args
@@ -175,7 +181,7 @@ def calendario():
     jdata_anterior = jdata_anterior_aux
 
     # Liga o cardapio atual com o da semana anterior
-    dias_da_semana = set([x['dia_semana'] for x in list(jdata+jdata_anterior)])
+    dias_da_semana = set([x['dia_semana'] for x in list(jdata + jdata_anterior)])
 
     cardapios = []
     for dia in dias_da_semana:
@@ -189,7 +195,6 @@ def calendario():
             cardapios.append(cardapio_atual)
 
         else:
-
             if cardapio_atual:
                 cardapio_atual['cardapio_semana_anterior'] = []
                 cardapios.append(cardapio_atual)
@@ -203,10 +208,9 @@ def calendario():
                                                            args['agrupamento'],
                                                            args['idade'])
 
-
         return render_template("editor_terceirizadas.html",
-                               url=api+'/cardapios',
-                               cardapios=jdata,
+                               url=api + '/cardapios',
+                               cardapios=cardapios,
                                tipo_atendimento=args['tipo_atendimento'],
                                tipo_unidade=args['tipo_unidade'],
                                idade=args['idade'],
@@ -215,7 +219,7 @@ def calendario():
 
     else:
         return render_template("editor_direto_misto_conveniada.html",
-                               url=api+'/cardapios',
+                               url=api + '/cardapios',
                                cardapios=jdata,
                                tipo_atendimento=args['tipo_atendimento'],
                                tipo_unidade=args['tipo_unidade'],
@@ -241,7 +245,7 @@ def visualizador():
         cardapios.append(cardapio)
 
     return render_template("visualizador_cardapio.html",
-                           url=api+'/cardapios',
+                           url=api + '/cardapios',
                            cardapios=jdata,
                            tipo_atendimento=args['tipo_atendimento'],
                            tipo_unidade=args['tipo_unidade'],
@@ -299,28 +303,32 @@ def publicacao():
     else:
         data_inicial = request.form.get('data-inicial', request.data)
         data_final = request.form.get('data-final', request.data)
-
         data_inicial = datetime.datetime.strptime(data_inicial, '%d/%m/%Y').strftime('%Y%m%d')
         data_final = datetime.datetime.strptime(data_final, '%d/%m/%Y').strftime('%Y%m%d')
+        filtro = request.form.get('filtro', request.data)
 
-        cardapio_aux = []
-        for cardapio in get_publicados():
-            if (data_inicial <= cardapio[4]) or (data_inicial <= cardapio[5]):
-                if (cardapio[4] <= data_final) or (cardapio[5] <= data_final):
-                    url = api + '/cardapios?' + '&' + cardapio[7]
-                    r = requests.get(url)
-                    refeicoes = r.json()
+        if filtro == 'STATUS':
+            return render_template("download_publicações.html",
+                                   data_inicio_fim=str(data_inicial + '-' + data_final))
 
-                    for refeicoes_dia in refeicoes:
-                        _keys = ['tipo_atendimento', 'tipo_unidade', 'agrupamento', 'idade', 'data', 'status']
-                        refeicao_dia_aux = [refeicoes_dia[_key] for _key in _keys]
-                        for refeicao in refeicoes_dia['cardapio'].keys():
-                            cardapio_aux.append(refeicao_dia_aux + [refeicao] + [', '.join(refeicoes_dia['cardapio'][refeicao])])
-
-        if cardapio_aux:
-            return render_template("download_publicações.html", publicados=cardapio_aux, data_inicio_fim=str(data_inicial+'-'+data_final))
         else:
-            return ('', 200)
+            cardapio_aux = []
+            for cardapio in get_grupo_publicacoes(filtro):
+                if (data_inicial <= cardapio[4]) or (data_inicial <= cardapio[5]):
+                    if (cardapio[4] <= data_final) or (cardapio[5] <= data_final):
+                        url = api + '/cardapios?' + '&' + cardapio[7]
+                        r = requests.get(url)
+                        refeicoes = r.json()
+
+                        for refeicoes_dia in refeicoes:
+                            _keys = ['tipo_atendimento', 'tipo_unidade', 'agrupamento', 'idade', 'data', 'status']
+                            refeicao_dia_aux = [refeicoes_dia[_key] for _key in _keys]
+                            for refeicao in refeicoes_dia['cardapio'].keys():
+                                cardapio_aux.append(
+                                    refeicao_dia_aux + [refeicao] + [', '.join(refeicoes_dia['cardapio'][refeicao])])
+
+            return render_template("download_publicações.html", publicados=cardapio_aux,
+                                   data_inicio_fim=str(data_inicial + '-' + data_final))
 
 
 @app.route('/download_csv', methods=['POST'])
@@ -332,23 +340,24 @@ def download_csv():
     cardapio_aux = []
     for cardapio in get_publicados():
         if (data_inicial <= cardapio[4]) or (data_inicial <= cardapio[5]):
-           if (cardapio[4] <= data_final) or (cardapio[5] <= data_final):
-               url = api + '/cardapios?' + '&' + cardapio[7]
-               r = requests.get(url)
-               refeicoes = r.json()
+            if (cardapio[4] <= data_final) or (cardapio[5] <= data_final):
+                url = api + '/cardapios?' + '&' + cardapio[7]
+                r = requests.get(url)
+                refeicoes = r.json()
 
-               for refeicoes_dia in refeicoes:
-                   _keys = ['tipo_atendimento', 'tipo_unidade', 'agrupamento', 'idade', 'data', 'status']
-                   refeicao_dia_aux = [refeicoes_dia[_key] for _key in _keys]
-                   for refeicao in refeicoes_dia['cardapio'].keys():
-                       cardapio_aux.append(refeicao_dia_aux + [refeicao] + [', '.join(refeicoes_dia['cardapio'][refeicao])])
+                for refeicoes_dia in refeicoes:
+                    _keys = ['tipo_atendimento', 'tipo_unidade', 'agrupamento', 'idade', 'data', 'status']
+                    refeicao_dia_aux = [refeicoes_dia[_key] for _key in _keys]
+                    for refeicao in refeicoes_dia['cardapio'].keys():
+                        cardapio_aux.append(
+                            refeicao_dia_aux + [refeicao] + [', '.join(refeicoes_dia['cardapio'][refeicao])])
 
     header = [['ATENDIMENTO', 'UNIDADE', 'AGRUPAMENTO', 'IDADE', 'DATA', 'STATUS', 'REFEICÃO', 'CARDÁPIO']]
     cardapio_aux = header + cardapio_aux
-    csvlist = '\n'.join(['"'+str('";"'.join(row))+'"' for row in cardapio_aux])
+    csvlist = '\n'.join(['"' + str('";"'.join(row)) + '"' for row in cardapio_aux])
     output = make_response(csvlist)
-    output.headers["Content-Disposition"] = "attachment; filename=publicados"+str(data_inicio_fim_str)+".csv"
-    output.headers["Content-type"] = "text/csv"
+    output.headers["Content-Disposition"] = "attachment; filename=agrupamento_publicações" + str(data_inicio_fim_str) + ".csv"
+    output.headers["Content-type"] = "text/csv; charset=utf-8'"
 
     if request.form:
         return output
@@ -359,7 +368,7 @@ def download_csv():
 # FUNÇÕES AUXILIARES
 def data_semana_format(text):
     date = datetime.datetime.strptime(text, "%Y%m%d").isocalendar()
-    return str(date[0])+"-"+str(date[1])
+    return str(date[0]) + "-" + str(date[1])
 
 
 def get_cardapio(args):
@@ -402,18 +411,19 @@ def get_pendencias():
         query_str = 'tipo_atendimento={}&tipo_unidade={}&agrupamento={}&idade={}&status={}&data_inicial={}&data_final={}'
         href = query_str.format(*_args)
 
-        pendentes.append([tipo_atendimento, tipo_unidade, agrupamento, idade, data_inicial, data_final, status, href, _key_semana])
+        pendentes.append(
+            [tipo_atendimento, tipo_unidade, agrupamento, idade, data_inicial, data_final, status, href, _key_semana])
 
     pendentes.sort()
     pendentes = list(pendentes for pendentes, _ in itertools.groupby(pendentes))
 
     for pendente in pendentes:
         _key = frozenset([pendente[2],
-                         pendente[1],
-                         pendente[0],
-                         pendente[6],
-                         pendente[3],
-                         pendente[8]])
+                          pendente[1],
+                          pendente[0],
+                          pendente[6],
+                          pendente[3],
+                          pendente[8]])
         pendente.append(','.join(_ids[_key]))
 
     return pendentes
@@ -451,18 +461,19 @@ def get_deletados():
         query_str = 'tipo_atendimento={}&tipo_unidade={}&agrupamento={}&idade={}&status={}&data_inicial={}&data_final={}'
         href = query_str.format(*_args)
 
-        pendentes.append([tipo_atendimento, tipo_unidade, agrupamento, idade, data_inicial, data_final, status, href, _key_semana])
+        pendentes.append(
+            [tipo_atendimento, tipo_unidade, agrupamento, idade, data_inicial, data_final, status, href, _key_semana])
 
     pendentes.sort()
     pendentes = list(pendentes for pendentes, _ in itertools.groupby(pendentes))
 
     for pendente in pendentes:
         _key = frozenset([pendente[2],
-                         pendente[1],
-                         pendente[0],
-                         pendente[6],
-                         pendente[3],
-                         pendente[8]])
+                          pendente[1],
+                          pendente[0],
+                          pendente[6],
+                          pendente[3],
+                          pendente[8]])
         pendente.append(','.join(_ids[_key]))
 
     return pendentes
@@ -500,18 +511,69 @@ def get_publicados():
         query_str = 'tipo_atendimento={}&tipo_unidade={}&agrupamento={}&idade={}&status={}&data_inicial={}&data_final={}'
         href = query_str.format(*_args)
 
-        pendentes.append([tipo_atendimento, tipo_unidade, agrupamento, idade, data_inicial, data_final, status, href, _key_semana])
+        pendentes.append(
+            [tipo_atendimento, tipo_unidade, agrupamento, idade, data_inicial, data_final, status, href, _key_semana])
 
     pendentes.sort()
     pendentes = list(pendentes for pendentes, _ in itertools.groupby(pendentes))
 
     for pendente in pendentes:
         _key = frozenset([pendente[2],
-                         pendente[1],
-                         pendente[0],
-                         pendente[6],
-                         pendente[3],
-                         pendente[8]])
+                          pendente[1],
+                          pendente[0],
+                          pendente[6],
+                          pendente[3],
+                          pendente[8]])
+        pendente.append(','.join(_ids[_key]))
+
+    return pendentes
+
+
+def get_grupo_publicacoes(status):
+    url = api + '/cardapios?status=' + status
+    r = requests.get(url)
+    refeicoes = r.json()
+
+    # Formatar as chaves
+    semanas = {}
+    for refeicao in refeicoes:
+        _key_semana = data_semana_format(refeicao['data'])
+        if _key_semana in semanas.keys():
+            semanas[_key_semana].append(refeicao['data'])
+        else:
+            semanas[_key_semana] = [refeicao['data']]
+
+    pendentes = []
+    _ids = collections.defaultdict(list)
+    for refeicao in refeicoes:
+        agrupamento = str(refeicao['agrupamento'])
+        tipo_unidade = refeicao['tipo_unidade']
+        tipo_atendimento = refeicao['tipo_atendimento']
+        status = refeicao['status']
+        idade = refeicao['idade']
+        _key_semana = data_semana_format(refeicao['data'])
+        _key = frozenset([agrupamento, tipo_unidade, tipo_atendimento, status, idade, _key_semana])
+        _ids[_key].append(refeicao['_id']['$oid'])
+        data_inicial = min(semanas[_key_semana])
+        data_final = max(semanas[_key_semana])
+
+        _args = (tipo_atendimento, tipo_unidade, agrupamento, idade, status, data_inicial, data_final)
+        query_str = 'tipo_atendimento={}&tipo_unidade={}&agrupamento={}&idade={}&status={}&data_inicial={}&data_final={}'
+        href = query_str.format(*_args)
+
+        pendentes.append(
+            [tipo_atendimento, tipo_unidade, agrupamento, idade, data_inicial, data_final, status, href, _key_semana])
+
+    pendentes.sort()
+    pendentes = list(pendentes for pendentes, _ in itertools.groupby(pendentes))
+
+    for pendente in pendentes:
+        _key = frozenset([pendente[2],
+                          pendente[1],
+                          pendente[0],
+                          pendente[6],
+                          pendente[3],
+                          pendente[8]])
         pendente.append(','.join(_ids[_key]))
 
     return pendentes
@@ -554,23 +616,23 @@ def get_cardapios_iguais():
             data_inicial = min(semanas[_key_semana])
             data_final = max(semanas[_key_semana])
 
-
         _args = (tipo_atendimento, tipo_unidade, agrupamento, idade, status, data_inicial, data_final)
         query_str = 'tipo_atendimento={}&tipo_unidade={}&agrupamento={}&idade={}&status={}&data_inicial={}&data_final={}'
         href = query_str.format(*_args)
 
-        pendentes.append([tipo_atendimento, tipo_unidade, agrupamento, idade, data_inicial, data_final, status, href, _key_semana])
+        pendentes.append(
+            [tipo_atendimento, tipo_unidade, agrupamento, idade, data_inicial, data_final, status, href, _key_semana])
 
     pendentes.sort()
     pendentes = list(pendentes for pendentes, _ in itertools.groupby(pendentes))
 
     for pendente in pendentes:
         _key = frozenset([pendente[2],
-                         pendente[1],
-                         pendente[0],
-                         pendente[6],
-                         pendente[3],
-                         pendente[8]])
+                          pendente[1],
+                          pendente[0],
+                          pendente[6],
+                          pendente[3],
+                          pendente[8]])
         pendente.append(','.join(_ids[_key]))
 
     return pendentes
@@ -612,5 +674,5 @@ if __name__ == "__main__":
     db_setup.set()
     app.secret_key = os.urandom(12)
     app.config['UPLOAD_FOLDER'] = './tmp'
-    #app.run(debug=True, host='0.0.0.0', port=5000)
-    app.run(debug=False, host='0.0.0.0', port=5000)
+    # app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000)

@@ -13,6 +13,9 @@
     <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.1/js/bootstrap-datepicker.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.1/css/bootstrap-datepicker3.css"/>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
 
     <style>
 
@@ -108,12 +111,21 @@
                     <div class="col-sm-3" style="width: 17%">
                         <input type="text" id="data-final" name="data-final" value="Date" class="form-control">
                     </div>
-                    <div class="col-sm-3" style="width: 20%">
+                    <div class="col-sm-3 dropdown" style="width: 10%">
+                        <select class="form-control input"  id="filtro" name="filtro">
+                            <option>STATUS</option>
+                            <option>PUBLICADO</option>
+                            <option>PENDENTE</option>
+                            <option>DELETADO</option>
+                        </select>
+
+                    </div>
+                    <div class="col-sm-3" style="width: 15%">
                         <button type="submit" class="btn btn-success">GERAR TABELA</button>
                     </div>
                 </form>
                 <form method="post" action="/download_csv">
-                    <div class="col-sm-3" style="padding-left: 20px">
+                    <div class="col-sm-3" style="width: 15%">
                         <button type="submit" id="btn_download" class="btn"><i class="glyphicon glyphicon-download-alt"></i> DOWNLOAD</button>
                         <input type="hidden" id="download_input" name="datas" value="{{data_inicio_fim}}">
                     </div>
@@ -308,6 +320,13 @@
         });
     </script>
 
+    <!-- Atualiza dropdown -->
+    <script>
+        $("#dropdown-status li a").click(function(){
+            $("#dropdown-name").html($(this).text()+' <span class="caret"></span>');
+            $("#dropdown-name").html($(this).text()+' <span class="caret"></span>');
+        });
+    </script>
 
 </body>
 </html>

@@ -135,8 +135,6 @@ def atualiza_cardapio():
 
 
 comments = []
-
-
 @app.route("/calendario", methods=["GET"])
 def calendario():
     args = request.args

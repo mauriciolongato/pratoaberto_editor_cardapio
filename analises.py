@@ -63,7 +63,7 @@ def open_csv():
     file = 'Cardapios Novos.csv'
 
     cardapio = []
-    with open(path+'/'+file, 'r', encoding="utf-8") as f:
+    with open(path+'/'+file, 'r', encoding='utf-8') as f:
 
         # REFEIÇÕES
         text = f.read().replace(' (Sopa e Fruta)', '')
@@ -104,7 +104,7 @@ def open_csv():
     objects = []
     for row in cardapio:
         if row[3] != '':
-            objects.append(['TERCEIRIZADA', row[0], 'EDITAL 1', row[4], row[1], row[2], row[3]])
+            objects.append(['TERCEIRIZADA', row[0], 'EDITAL 78/2016', row[4], row[1], row[2], row[3]])
             # db_functions.add_cardapio('TERCEIRIZADA', row[0], 'EDITA1', row[4], row[1], row[2], row[3])
 
     db_functions.add_bulk_cardapio(objects)

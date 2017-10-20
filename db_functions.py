@@ -177,6 +177,9 @@ if __name__ == '__main__':
     #a = select_receitas_terceirizadas('TERCEIRIZADA', 'CEI', 'EDITAL 1', 'D - 6 MESES')
     a = select_quebras_terceirizadas()
     print(a)
+
+    b = select_all()
+    print(b)
     # print(filtra_grupos_replacements('TEMPEROS'))
     #print(select_distinct_substitution_groups())
     #for row in select_all():

@@ -113,7 +113,7 @@
                             <thead>
                                 <tr>
                                     <th onclick="w3.sortHTML('#task-table', '.item', 'td:nth-child(1)')" style="cursor:pointer; word-wrap: break-word;min-width: 150px;max-width: 150px;">ID <i class="fa fa-sort" aria-hidden="true"></i></th>
-                                    <th onclick="w3.sortHTML('#task-table', '.item', 'td:nth-child(2)')" style="cursor:pointer; word-wrap: break-word;min-width: 150px;max-width: 150px;">GRUPO SUBSTITUIÇÃO <i class="fa fa-sort" aria-hidden="true"></i></th>
+                                    <th onclick="w3.sortHTML('#task-table', '.item', 'td:nth-child(2)')" style="cursor:pointer; word-wrap: break-word;min-width: 150px;max-width: 150px; display:none">GRUPO SUBSTITUIÇÃO <i class="fa fa-sort" aria-hidden="true"></i></th>
                                     <th onclick="w3.sortHTML('#task-table', '.item', 'td:nth-child(3)')" style="cursor:pointer; word-wrap: break-word;min-width: 150px;max-width: 150px;">ESCOPO <i class="fa fa-sort" aria-hidden="true"></i></th>
                                     <th onclick="w3.sortHTML('#task-table', '.item', 'td:nth-child(4)')" style="cursor:pointer; word-wrap: break-word;min-width: 150px;max-width: 150px;">DE <i class="fa fa-sort" aria-hidden="true"></i></th>
                                     <th onclick="w3.sortHTML('#task-table', '.item', 'td:nth-child(5)')" style="cursor:pointer; word-wrap: break-word;min-width: 150px;max-width: 150px;">PARA <i class="fa fa-sort" aria-hidden="true"></i></th>
@@ -124,7 +124,7 @@
                                 {% for linha in config: %}
                                 <tr class="item">
                                     <td class="ids">{{ linha[0] }}</td>
-                                    <td class="substitution_group">{{ linha[1] }}</td>
+                                    <td class="substitution_group" style="display:none">{{ linha[1] }}</td>
                                     <td class="substitution_scope" contenteditable="true">{{ linha[2] }}</td>
                                     <td class="from_word" contenteditable="true">{{ linha[3] }}</td>
                                     <td class="to_word" contenteditable="true">{{ linha[4] }}</td>
@@ -231,8 +231,8 @@
             $('#task-table').append(
                 "<tr class='item'>" +
                 "<td class='ids'>NOVO</td>" +
-                "<td class='substitution_group'>TEMPEROS</td>" +
-                "<td class='substitution_scope'>INGREDIENTES</td>" +
+                "<td class='substitution_group' style='display:none'></td>" +
+                "<td class='substitution_scope' contenteditable='true'>INGREDIENTES</td>" +
                 "<td class='from_word' contenteditable='true'></td>" +
                 "<td class='to_word' contenteditable='true'></td>" +
                 "<td><a value='Delete' onclick='deleteRow(this)'><i style='color:#D9534F;font-size:30px;text-align: center' class='fa'></i></a></td>" +

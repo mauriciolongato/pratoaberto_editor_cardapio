@@ -3,7 +3,6 @@ import datetime
 import itertools
 import json
 import os
-import re
 import requests
 from flask import Flask, flash, redirect, render_template, request, url_for, make_response
 from werkzeug.utils import secure_filename
@@ -25,24 +24,36 @@ api = 'https://pratoaberto.tk/api'
 def backlog():
     if request.method == "GET":
         pendentes = get_pendencias()
-        return render_template("pendencias_publicacao.html", pendentes=pendentes)
+        semanas = sorted(set([x[8] for x in pendentes]), reverse=True)
+        return render_template("pendencias_publicacao.html",
+                               pendentes=pendentes,
+                               semanas=semanas)
 
     else:
         pendentes = get_pendencias()
-        return render_template("pendencias_publicacao.html", pendentes=pendentes)
+        return render_template("pendencias_publicacao.html",
+                               pendentes=pendentes,
+                               semanas=semanas)
+
 
 @app.route("/pendencias_deletadas", methods=["GET", "POST"])
 def deletados():
     if request.method == "GET":
         deletados = get_deletados()
-        return render_template("pendencias_deletadas.html", pendentes=deletados)
+        semanas = sorted(set([x[8] for x in deletados]), reverse=True)
+        return render_template("pendencias_deletadas.html",
+                               pendentes=deletados,
+                               semanas=semanas)
 
 
 @app.route("/pendencias_publicadas", methods=["GET", "POST"])
 def publicados():
     if request.method == "GET":
         publicados = get_publicados()
-        return render_template("pendencias_publicadas.html", pendentes=publicados)
+        semanas = sorted(set([x[8] for x in publicados]), reverse=True)
+        return render_template("pendencias_publicadas.html",
+                               pendentes=publicados,
+                               semanas=semanas)
 
 
 @app.route('/upload', methods=['POST'])

@@ -124,6 +124,16 @@
                 </form>
             </div>
         </div>
+        <div class="row">
+            <div class="col-sm-4 dropdown" style="width: 15%">
+                <label> Selecione a semana:</label>
+                <select class="form-control input"  id="filtro_semana" name="filtro_semana">
+                    {% for semana in semanas: %}
+                        <option>{{ semana }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
 
         <!-- Upload form -->
         <div class="modal fade" tabindex="-1" role="dialog" id="xml_form">
@@ -168,6 +178,7 @@
                             <thead>
                                 <tr>
                                     <th style="display: none;"></th>
+                                    <th style="display: none;"></th>
                                     <th style="min-width: 20px;max-width: 20px"></th>
                                     <th onclick="w3.sortHTML('#task-table', '.item', 'td:nth-child(2)')" style="cursor:pointer; word-wrap: break-word;min-width: 150px;max-width: 150px;">TIPO GESTÃO <i class="fa fa-sort" aria-hidden="true"></i></th>
                                     <th onclick="w3.sortHTML('#task-table', '.item', 'td:nth-child(3)')" style="cursor:pointer; word-wrap: break-word;min-width: 150px;max-width: 150px;">TIPO ESCOLA <i class="fa fa-sort" aria-hidden="true"></i></th>
@@ -184,8 +195,9 @@
                             </thead>
                             <tbody>
                                 {% for linha in pendentes: %}
-                                <tr class="item">
+                                <tr class="item" style="display: none;">
                                     <td class="ids" style="display: none;">{{ linha[9] }}</td>
+                                    <td class="semana" style="display: none;">{{ linha[8] }}</td>
                                     <td class="box"><input class="box_grupo" style="width: 20px; height: 20px;" type="checkbox" value=""></td>
                                     <td class="tipo_gestao">{{ linha[0] }}</td>
                                     <td class="tipo_escola">{{ linha[1] }}</td>
@@ -225,65 +237,65 @@
 
     <!-- Script com a funcionalidade do filtro da tabela -->
     <script>
-    /**
-    *   I don't recommend using this plugin on large tables, I just wrote it to make the demo useable. It will work fine for smaller tables
-    *   but will likely encounter performance issues on larger tables.
-    *
-    *		<input type="text" class="form-control" id="dev-table-filter" data-action="filter" data-filters="#dev-table" placeholder="Filter Developers" />
-    *		$(input-element).filterTable()
-    *
-    *	The important attributes are 'data-action="filter"' and 'data-filters="#table-selector"'
-    */
-    (function(){
-        'use strict';
-        var $ = jQuery;
-        $.fn.extend({
-            filterTable: function(){
-                return this.each(function(){
-                    $(this).on('keyup', function(e){
-                        $('.filterTable_no_results').remove();
-                        var $this = $(this),
-                            search = $this.val().toLowerCase(),
-                            target = $this.attr('data-filters'),
-                            $target = $(target),
-                            $rows = $target.find('tbody tr');
+        /**
+        *   I don't recommend using this plugin on large tables, I just wrote it to make the demo useable. It will work fine for smaller tables
+        *   but will likely encounter performance issues on larger tables.
+        *
+        *		<input type="text" class="form-control" id="dev-table-filter" data-action="filter" data-filters="#dev-table" placeholder="Filter Developers" />
+        *		$(input-element).filterTable()
+        *
+        *	The important attributes are 'data-action="filter"' and 'data-filters="#table-selector"'
+        */
+        (function(){
+            'use strict';
+            var $ = jQuery;
+            $.fn.extend({
+                filterTable: function(){
+                    return this.each(function(){
+                        $(this).on('keyup', function(e){
+                            $('.filterTable_no_results').remove();
+                            var $this = $(this),
+                                search = $this.val().toLowerCase(),
+                                target = $this.attr('data-filters'),
+                                $target = $(target),
+                                $rows = $target.find('tbody tr');
 
-                        if(search == '') {
-                            $rows.show();
-                        } else {
-                            $rows.each(function(){
-                                var $this = $(this);
-                                $this.text().toLowerCase().indexOf(search) === -1 ? $this.hide() : $this.show();
-                            })
-                            if($target.find('tbody tr:visible').size() === 0) {
-                                var col_count = $target.find('tr').first().find('td').size();
-                                var no_results = $('<tr class="filterTable_no_results"><td colspan="'+col_count+'">No results found</td></tr>')
-                                $target.find('tbody').append(no_results);
+                            if(search == '') {
+                                $rows.show();
+                            } else {
+                                $rows.each(function(){
+                                    var $this = $(this);
+                                    $this.text().toLowerCase().indexOf(search) === -1 ? $this.hide() : $this.show();
+                                })
+                                if($target.find('tbody tr:visible').size() === 0) {
+                                    var col_count = $target.find('tr').first().find('td').size();
+                                    var no_results = $('<tr class="filterTable_no_results"><td colspan="'+col_count+'">No results found</td></tr>')
+                                    $target.find('tbody').append(no_results);
+                                }
                             }
-                        }
+                        });
                     });
-                });
-            }
-        });
-        $('[data-action="filter"]').filterTable();
-    })(jQuery);
+                }
+            });
+            $('[data-action="filter"]').filterTable();
+        })(jQuery);
 
-    $(function(){
-        // attach table filter plugin to inputs
-        $('[data-action="filter"]').filterTable();
+        $(function(){
+            // attach table filter plugin to inputs
+            $('[data-action="filter"]').filterTable();
 
-        $('.container').on('click', '.panel-heading span.filter', function(e){
-            var $this = $(this),
-                $panel = $this.parents('.panel');
+            $('.container').on('click', '.panel-heading span.filter', function(e){
+                var $this = $(this),
+                    $panel = $this.parents('.panel');
 
-            $panel.find('.panel-body').slideToggle();
-            if($this.css('display') != 'none') {
-                $panel.find('.panel-body input').focus();
-            }
-        });
-        $('[data-toggle="tooltip"]').tooltip();
-    })
-</script>
+                $panel.find('.panel-body').slideToggle();
+                if($this.css('display') != 'none') {
+                    $panel.find('.panel-body input').focus();
+                }
+            });
+            $('[data-toggle="tooltip"]').tooltip();
+        })
+    </script>
 
     <!-- Botões de ordenação da tabela -->
     <script src="static/js/w3.js"></script>
@@ -368,7 +380,7 @@
                 arrayOfValues =  $('input:checkbox:checked', tableControl).map(function() {
                     var row = jQuery(this).closest('tr');
                     var id = $(row.children('td')[0]).text();
-                    var url = $(row.children('td')[12]).text()
+                    var url = $(row.children('td')[12]).text();
                     lista_ids.push(url)
                 });
                 /*window.alert(lista_ids)*/
@@ -384,6 +396,41 @@
             window.alert($('#mensagem').text())
         }
     </script>
+
+    <!-- Filtro da semana ao carregar a pagina -->
+    <script>
+        $(document).ready(function() {
+            var semana_filtro = $('#filtro_semana').val()
+            $('#task-table tr').not(':first').each(function() {
+                var semana_linha = $($(this).children('td')[1]).text()
+                if (semana_linha == semana_filtro) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        });
+    </script>
+
+    <!-- Fitra a tabela ao mudar o selector -->
+    <script>
+        $(function(){
+            //change to two ? how?
+            $('#filtro_semana').change(function(){
+                var semana_filtro = $(this).val();
+                $('#task-table tr').not(':first').each(function() {
+                    var semana_linha = $($(this).children('td')[1]).text()
+                    if (semana_linha == semana_filtro) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+
+                });
+            });
+        });
+    </script>
+
 
 </body>
 </html>

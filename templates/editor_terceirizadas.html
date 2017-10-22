@@ -71,7 +71,7 @@
 
     </style>
 </head>
-<body>
+<>
     <div class="container">
         <!-- NAVBAR -->
         <div class="row">
@@ -112,6 +112,10 @@
             <span type="button" class="btn btn-lg btn-default disabled" id="agrupamento">{{ agrupamento }}</span>
         </div>
 
+        <div class="row">
+            <button onclick="addRow()" class="btn btn-primary" style="float: right"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button>
+        </div>
+
         <!-- Acrescentar a tabela para o calendario -->
         <div class="row tbl">
             <div class="panel panel-success">
@@ -137,6 +141,7 @@
                                     <th onclick="w3.sortHTML('#task-table', '.item', 'td:nth-child(4)')" style="cursor:pointer; word-wrap: break-word;min-width: 200px;max-width: 200px;">LISTA DE ALIMENTOS (PAPA)<i class="fa fa-sort" aria-hidden="true"></i></th>
                                     <th style="cursor:pointer; word-wrap: break-word;min-width: 200px;max-width: 200px;">RECEITA</th>
                                     <th style="cursor:pointer; word-wrap: break-word;min-width: 200px;max-width: 200px;">SEMANA ANTERIOR</th>
+                                    <th style="cursor:pointer; word-wrap: break-word;min-width: 30px;max-width: 30px;"></th>
                                     <th style="cursor:pointer; word-wrap: break-word;min-width: 30px;max-width: 30px;"></th>
                                 </tr>
                             </thead>
@@ -164,6 +169,9 @@
                                     </td>
                                     <td>
                                         <button onclick="get_cardapio(this)" class="btn btn-primary" style="padding: 5px 9px;"><span class="glyphicon glyphicon-refresh"></span></button>
+                                    </td>
+                                    <td>
+                                        <button onclick="deleteRow(this)" value='Delete' class="btn btn-danger" style="padding: 5px 9px;"><span class="glyphicon glyphicon-remove"></span></button>
                                     </td>
 
                                 </tr>
@@ -360,6 +368,58 @@
             var randomNumber = Math.floor(Math.random()*cardapio.length);
             document.getElementById("task-table").rows[i].cells[4].innerHTML = cardapio[randomNumber];
         }
+    </script>
+
+    <!-- Adiciona nova refeição -->
+    <script>
+        function addRow() {
+            $('#task-table').append(
+                "<tr class='item' id=''>" +
+                    "<td class='data_editavel' contenteditable='true'>yyyymmdd</td>" +
+                    "<td contenteditable='true'></td>" +
+                    "<td contenteditable='true'></td>" +
+                    "<td></td>" +
+                    "<td contenteditable='true' style='background-color: #FFEEAD'></td>" +
+                    "<td></td>" +
+                    "<td><button onclick='get_cardapio(this)' class='btn btn-primary' style='padding: 5px 9px;'><span class='glyphicon glyphicon-refresh'></span></button></td>" +
+                    "<td><button onclick='deleteRow(this)' value='Delete' class='btn btn-danger' style='padding: 5px 9px;'><span class='glyphicon glyphicon-remove'></span></button></td>" +
+                "</tr>"
+            );
+        };
+    </script>
+
+    <!-- Deleta refeição -->
+    <script>
+        function deleteRow(r) {
+            var i = r.parentNode.parentNode.rowIndex;
+            document.getElementById("task-table").deleteRow(i);
+        }
+    </script>
+
+    <!-- Atualiza id do elemanto quando campo é atualizado -->
+    <script>
+        $('body').on('focus', '[contenteditable]', function() {
+            var $this = $(this);
+            $this.data('before', $this.html());
+            return $this
+            }).on('blur keyup paste input', '[contenteditable]', function() {
+                var $this = $(this);
+                if ($this.data('before') !== $this.html()) {
+                    $this.data('before', $this.html());
+                    $this.trigger('change');
+                }
+                var dia = $this.html();
+                $('#task-table tr').each(function() {
+                    if ( dia == $($(this).children('td')[0]).html()) {
+                        if ( $($(this).children('td')[0]).html() != "" ) {
+                            var row = $this.closest('tr');
+                            var id_exemplo = $(this).attr('id');
+                            $(row).attr('id', id_exemplo)
+                        };
+                    };
+                })
+            });
+
     </script>
 
 </body>

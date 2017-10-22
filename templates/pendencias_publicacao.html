@@ -15,7 +15,7 @@
 
         /* Objetos da tabela */
         .row {
-		    margin-top:40px;
+		    margin-top:30px;
 		    padding: 0 10px;
 		}
 
@@ -111,14 +111,19 @@
         </div>
 
         <!-- Informações do agrupamento -->
-        <div class="container">
-            <div style="text-align: left">
+        <div class="row">
+            <div class="col-sm-8" style="text-align: left">
                 <a href="/" class="btn btn-lg btn-default disabled" >Cardápios Pendentes</a>
                 <a href="/pendencias_publicadas" class="btn btn-lg btn-success">Cardápios Publicados</a>
                 <a href="/pendencias_deletadas" class="btn btn-lg btn-danger">Cardápios Deletados</a>
             </div>
+            <div class="col-sm-4" style="text-align: right">
+                <form method="post" action="/calendario_editor_grupo">
+                    <button  class="btn btn-lg btn-info pull-right"  type="submit" style="display: none" id="botao_edicao_grupo">EDITAR GRUPO</button>
+                    <input type="hidden" name="json_dump" id="json_dump" value="json_dump">
+                </form>
+            </div>
         </div>
-
 
         <!-- Upload form -->
         <div class="modal fade" tabindex="-1" role="dialog" id="xml_form">
@@ -163,22 +168,25 @@
                             <thead>
                                 <tr>
                                     <th style="display: none;"></th>
+                                    <th style="min-width: 20px;max-width: 20px"></th>
                                     <th onclick="w3.sortHTML('#task-table', '.item', 'td:nth-child(2)')" style="cursor:pointer; word-wrap: break-word;min-width: 150px;max-width: 150px;">TIPO GESTÃO <i class="fa fa-sort" aria-hidden="true"></i></th>
                                     <th onclick="w3.sortHTML('#task-table', '.item', 'td:nth-child(3)')" style="cursor:pointer; word-wrap: break-word;min-width: 150px;max-width: 150px;">TIPO ESCOLA <i class="fa fa-sort" aria-hidden="true"></i></th>
                                     <th onclick="w3.sortHTML('#task-table', '.item', 'td:nth-child(4)')" style="cursor:pointer; word-wrap: break-word;min-width: 160px;max-width: 160px;">AGRUPAMENTO <i class="fa fa-sort" aria-hidden="true"></i></th>
                                     <th onclick="w3.sortHTML('#task-table', '.item', 'td:nth-child(5)')" style="cursor:pointer; word-wrap: break-word;min-width: 160px;max-width: 160px;">IDADE <i class="fa fa-sort" aria-hidden="true"></i></th>
-                                    <th onclick="w3.sortHTML('#task-table', '.item', 'td:nth-child(6)')" style="cursor:pointer; word-wrap: break-word;min-width: 140px;max-width: 140px;">DATA INICIAL <i class="fa fa-sort" aria-hidden="true"></i></th>
-                                    <th onclick="w3.sortHTML('#task-table', '.item', 'td:nth-child(7)')" style="cursor:pointer; word-wrap: break-word;min-width: 140px;max-width: 140px;">DATA FINAL <i class="fa fa-sort" aria-hidden="true"></i></th>
+                                    <th onclick="w3.sortHTML('#task-table', '.item', 'td:nth-child(6)')" style="cursor:pointer; word-wrap: break-word;min-width: 120px;max-width: 120px;">DATA INICIAL <i class="fa fa-sort" aria-hidden="true"></i></th>
+                                    <th onclick="w3.sortHTML('#task-table', '.item', 'td:nth-child(7)')" style="cursor:pointer; word-wrap: break-word;min-width: 120px;max-width: 120px;">DATA FINAL <i class="fa fa-sort" aria-hidden="true"></i></th>
                                     <th onclick="w3.sortHTML('#task-table', '.item', 'td:nth-child(8)')" style="cursor:pointer; word-wrap: break-word;min-width: 180px;max-width: 180px;">STATUS CARDÁPIO <i class="fa fa-sort" aria-hidden="true"></i></th>
                                     <th ></th>
                                     <th ></th>
                                     <th ></th>
+                                    <th style="display: none;"></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for linha in pendentes: %}
                                 <tr class="item">
                                     <td class="ids" style="display: none;">{{ linha[9] }}</td>
+                                    <td class="box"><input class="box_grupo" style="width: 20px; height: 20px;" type="checkbox" value=""></td>
                                     <td class="tipo_gestao">{{ linha[0] }}</td>
                                     <td class="tipo_escola">{{ linha[1] }}</td>
                                     <td class="agrupamento">{{ linha[2] }}</td>
@@ -189,6 +197,7 @@
                                     <td ><a class="btn btn-info" href="/calendario?{{ linha[7] }}">EDITAR</a></td>
                                     <td ><button class="btn btn-success publicar" value="PUBLICAR">PUBLICAR</button></td>
                                     <td ><a value="DELETAR" class="deletar"><i style="color:#D9534F;font-size:30px;text-align: center" class="fa">&#xf2d3;</i></a></td>
+                                    <td class="url" style="display: none;">/cardapios?{{ linha[7] }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -197,10 +206,21 @@
                 </div>
             </div>
         </div>
+
         <footer class="container-fluid text-center">
             <br>
             <p><a href="http://pratoaberto.sme.prefeitura.sp.gov.br/" title="Projeto Prato Aberto">http://pratoaberto.sme.prefeitura.sp.gov.br/</a></p>
         </footer>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class=flashes>
+                    {% for category, message in messages %}
+                        <li id="mensagem" class="{{ category }} hidden">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
     </div>
 
     <!-- Script com a funcionalidade do filtro da tabela -->
@@ -330,6 +350,39 @@
 
         });
 
+    </script>
+
+    <!-- Lista Edição Grupo -->
+    <script>
+        $(".box_grupo").on( "click", function() {
+            var numberNotChecked = $('input:checkbox:checked').length;
+            if (numberNotChecked > 1) {
+                document.getElementById('botao_edicao_grupo').style.display = "block";
+            } else {
+                document.getElementById('botao_edicao_grupo').style.display = "none";
+            }
+
+            $(document).ready(function() {
+                var tableControl= document.getElementById('task-table');
+                var lista_ids = []
+                arrayOfValues =  $('input:checkbox:checked', tableControl).map(function() {
+                    var row = jQuery(this).closest('tr');
+                    var id = $(row.children('td')[0]).text();
+                    var url = $(row.children('td')[12]).text()
+                    lista_ids.push(url)
+                });
+                /*window.alert(lista_ids)*/
+                $('#json_dump').attr('value', JSON.stringify(lista_ids))
+            });
+
+        });
+    </script>
+
+    <!-- Pop erro -->
+    <script>
+        if ($('#mensagem').length) {
+            window.alert($('#mensagem').text())
+        }
     </script>
 
 </body>

@@ -3,6 +3,7 @@ import datetime
 import itertools
 import json
 import os
+import re
 import requests
 from flask import Flask, flash, redirect, render_template, request, url_for, make_response
 from werkzeug.utils import secure_filename
@@ -26,6 +27,9 @@ def backlog():
         pendentes = get_pendencias()
         return render_template("pendencias_publicacao.html", pendentes=pendentes)
 
+    else:
+        pendentes = get_pendencias()
+        return render_template("pendencias_publicacao.html", pendentes=pendentes)
 
 @app.route("/pendencias_deletadas", methods=["GET", "POST"])
 def deletados():
@@ -249,6 +253,102 @@ def visualizador():
                            tipo_unidade=args['tipo_unidade'],
                            idade=args['idade'],
                            agrupamento=args['agrupamento'])
+
+
+@app.route("/calendario_editor_grupo", methods=["POST"])
+def calendario_grupo_cardapio():
+    data = request.form.get('json_dump', request.data)
+
+    charset = ['"', '[', ']']
+    for char in charset:
+        data = data.replace(char, '')
+    data = data.split(',')
+
+    # Datas compativeis (Todas as quebras precisam ter as mesmas datas no conjunto)
+    lista_data_inicial = []
+    lista_data_final = []
+    lista_args = []
+    for url in data:
+        args = dict([tuple(x.split('=')) for x in url.split('?')[1].split('&')])
+        lista_data_inicial.append(args['data_inicial'])
+        lista_data_final.append(args['data_final'])
+        lista_args.append(args)
+
+    if (len(set(lista_data_inicial)) > 1) or (len(set(lista_data_final)) > 1):
+        flash('A cópia de cardápios só é permitida para quabras com mesmo periodo')
+        return redirect(url_for('backlog'))
+
+    depara = db_functions.select_all()
+    depara = [x[3:5] for x in depara if x[1] == 'TEMPEROS' and x[2] == 'INGREDIENTES']
+    cardapios = []
+    for url in data:
+        args = dict([tuple(x.split('=')) for x in url.split('?')[1].split('&')])
+        jdata = get_cardapio(args)
+
+        # Obtem data semana anterior
+        args_semana_anterior = args.copy()
+        args_semana_anterior['status'] = 'SALVO&status=PUBLICADO'
+
+        delta_dias = datetime.timedelta(days=7)
+        data_final_semana_anterior = datetime.datetime.strptime(str(args['data_final']), '%Y%m%d') - delta_dias
+        data_inicial_semana_anterior = datetime.datetime.strptime(str(args['data_inicial']), '%Y%m%d') - delta_dias
+        args_semana_anterior['data_final'] = datetime.datetime.strftime(data_final_semana_anterior, '%Y%m%d')
+        args_semana_anterior['data_inicial'] = datetime.datetime.strftime(data_inicial_semana_anterior, '%Y%m%d')
+        jdata_anterior = get_cardapio(args_semana_anterior)
+
+        jdata_aux = []
+        for cardapio_atual in jdata:
+            dia = datetime.datetime.strptime(str(cardapio_atual['data']), '%Y%m%d').weekday()
+            cardapio_atual['dia_semana'] = dia_semana(dia)
+            jdata_aux.append(cardapio_atual)
+
+        jdata_anterior_aux = []
+        for cardapio_anterior in jdata_anterior:
+            dia = datetime.datetime.strptime(str(cardapio_anterior['data']), '%Y%m%d').weekday()
+            cardapio_anterior['dia_semana'] = dia_semana(dia)
+            jdata_anterior_aux.append(cardapio_anterior)
+
+        jdata = jdata_aux
+        jdata_anterior = jdata_anterior_aux
+
+        # Liga o cardapio atual com o da semana anterior
+        dias_da_semana = set([x['dia_semana'] for x in list(jdata + jdata_anterior)])
+
+        for dia in dias_da_semana:
+            cardapio_atual = filtro_dicionarios(jdata, 'dia_semana', dia)
+            cardapio_anterior = filtro_dicionarios(jdata_anterior, 'dia_semana', dia)
+
+            if cardapio_atual and cardapio_anterior:
+                cardapio_atual['cardapio_semana_anterior'] = cardapio_anterior['cardapio']
+                cardapios.append(cardapio_atual)
+
+            else:
+                if cardapio_atual:
+                    cardapio_atual['cardapio_semana_anterior'] = []
+                    cardapios.append(cardapio_atual)
+
+                elif cardapio_anterior:
+                    cardapio_atual['cardapio_semana_anterior'] = []
+                    cardapios.append(cardapio_atual)
+
+    if lista_args[0]['tipo_atendimento'] == 'TERCEIRIZADA':
+        historicos_cardapios = get_cardapios_terceirizadas(lista_args[0]['tipo_atendimento'],
+                                                           lista_args[0]['tipo_unidade'],
+                                                           lista_args[0]['agrupamento'],
+                                                           lista_args[0]['idade'])
+
+        return render_template("editor_grupo_terceirizadas.html",
+                               url=api + '/cardapios',
+                               cardapios=cardapios,
+                               args=lista_args,
+                               historicos_cardapios=historicos_cardapios)
+
+    else:
+        return render_template("editor_grupo_direto_misto_conveniada.html",
+                               url=api + '/cardapios',
+                               cardapios=cardapios,
+                               args=lista_args,
+                               depara=depara)
 
 
 @app.route("/configuracoes_gerais", methods=['GET', 'POST'])

@@ -156,10 +156,10 @@ def calendario():
 
     # Monta json - Semana da requisicao
     jdata = get_cardapio(args)
-    jdata = [d for d in jdata if d['tipo_atendimento'] in args['tipo_atendimento']]
-    jdata = [d for d in jdata if d['idade'] in args['idade']]
-    jdata = [d for d in jdata if d['tipo_unidade'] in args['tipo_unidade']]
-    jdata = [d for d in jdata if str(d['agrupamento']) in args['agrupamento']]
+    #jdata = [d for d in jdata if d['tipo_atendimento'] in args['tipo_atendimento']]
+    #jdata = [d for d in jdata if d['idade'] in args['idade']]
+    #jdata = [d for d in jdata if d['tipo_unidade'] in args['tipo_unidade']]
+    #jdata = [d for d in jdata if str(d['agrupamento']) in args['agrupamento']]
 
     # Obtem data semana anterior
     args_semana_anterior = args.copy()
@@ -173,10 +173,10 @@ def calendario():
     args_semana_anterior['data_inicial'] = datetime.datetime.strftime(data_inicial_semana_anterior, '%Y%m%d')
     # Monta json - Semana anterior a da requisicao
     jdata_anterior = get_cardapio(args_semana_anterior)
-    jdata_anterior = [d for d in jdata_anterior if d['tipo_atendimento'] in args_semana_anterior['tipo_atendimento']]
-    jdata_anterior = [d for d in jdata_anterior if d['idade'] in args_semana_anterior['idade']]
-    jdata_anterior = [d for d in jdata_anterior if d['tipo_unidade'] in args_semana_anterior['tipo_unidade']]
-    jdata_anterior = [d for d in jdata_anterior if str(d['agrupamento']) in args_semana_anterior['agrupamento']]
+    #jdata_anterior = [d for d in jdata_anterior if d['tipo_atendimento'] in args_semana_anterior['tipo_atendimento']]
+    #jdata_anterior = [d for d in jdata_anterior if d['idade'] in args_semana_anterior['idade']]
+    #jdata_anterior = [d for d in jdata_anterior if d['tipo_unidade'] in args_semana_anterior['tipo_unidade']]
+    #jdata_anterior = [d for d in jdata_anterior if str(d['agrupamento']) in args_semana_anterior['agrupamento']]
 
     jdata_aux = []
     for cardapio_atual in jdata:

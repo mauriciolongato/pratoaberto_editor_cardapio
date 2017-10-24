@@ -71,7 +71,7 @@
 
     </style>
 </head>
-<>
+<body>
     <div class="container">
         <!-- NAVBAR -->
         <div class="row">
@@ -151,7 +151,7 @@
                                 <tr class="item" id="{{ cardapio['_id']['$oid'] }}">
                                     <td>{{ cardapio['data'] }}</td>
                                     <td>{{ cardapio['dia_semana'] }}</td>
-                                    <td>{{ tipo_refeicao }}</td>
+                                    <td contenteditable="true">{{ tipo_refeicao }}</td>
                                     <td class="lista-alimentos">
                                         {% for ingrediente in cardapio['cardapio_original'][tipo_refeicao] %}
                                             {{ ingrediente }},

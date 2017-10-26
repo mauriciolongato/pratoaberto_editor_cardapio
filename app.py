@@ -24,13 +24,16 @@ api = 'https://pratoaberto.tk/api'
 def backlog():
     if request.method == "GET":
         pendentes = get_pendencias()
-        semanas = sorted(set([x[8] for x in pendentes]), reverse=True)
+        #semanas = sorted(set([x[8] for x in pendentes]), reverse=True)
+        semanas = sorted(set([str(x[4]) + ' - ' + str(x[5]) for x in pendentes]), reverse=True)
         return render_template("pendencias_publicacao.html",
                                pendentes=pendentes,
                                semanas=semanas)
 
     else:
         pendentes = get_pendencias()
+        #semanas = sorted(set([x[8] for x in pendentes]), reverse=True)
+        semanas = sorted(set([str(x[4]) + ' - ' + str(x[5]) for x in pendentes]), reverse=True)
         return render_template("pendencias_publicacao.html",
                                pendentes=pendentes,
                                semanas=semanas)
@@ -40,7 +43,8 @@ def backlog():
 def deletados():
     if request.method == "GET":
         deletados = get_deletados()
-        semanas = sorted(set([x[8] for x in deletados]), reverse=True)
+        #semanas = sorted(set([x[8] for x in deletados]), reverse=True)
+        semanas = sorted(set([str(x[4]) + ' - ' + str(x[5]) for x in deletados]), reverse=True)
         return render_template("pendencias_deletadas.html",
                                pendentes=deletados,
                                semanas=semanas)
@@ -50,7 +54,8 @@ def deletados():
 def publicados():
     if request.method == "GET":
         publicados = get_publicados()
-        semanas = sorted(set([x[8] for x in publicados]), reverse=True)
+        #semanas = sorted(set([x[8] for x in publicados]), reverse=True)
+        semanas = sorted(set([str(x[4]) + ' - ' + str(x[5]) for x in publicados]), reverse=True)
         return render_template("pendencias_publicadas.html",
                                pendentes=publicados,
                                semanas=semanas)
@@ -418,7 +423,8 @@ def publicacao():
 
         if filtro == 'STATUS':
             return render_template("download_publicações.html",
-                                   data_inicio_fim=str(data_inicial + '-' + data_final))
+                                   data_inicio_fim=str(data_inicial + '-' + data_final),
+                                   filtro_selected=filtro)
 
         else:
             cardapio_aux = []
@@ -437,7 +443,8 @@ def publicacao():
                                     refeicao_dia_aux + [refeicao] + [', '.join(refeicoes_dia['cardapio'][refeicao])])
 
             return render_template("download_publicações.html", publicados=cardapio_aux,
-                                   data_inicio_fim=str(data_inicial + '-' + data_final))
+                                   data_inicio_fim=str(data_inicial + '-' + data_final),
+                                   filtro_selected=filtro)
 
 
 @app.route('/download_csv', methods=['POST'])
@@ -445,33 +452,38 @@ def download_csv():
     data_inicio_fim_str = request.form.get('datas', request.data)
     data_inicial = data_inicio_fim_str.split('-')[0]
     data_final = data_inicio_fim_str.split('-')[1]
+    filtro = request.form.get('filtro_selected', request.data)
 
-    cardapio_aux = []
-    for cardapio in get_publicados():
-        if (data_inicial <= cardapio[4]) or (data_inicial <= cardapio[5]):
-            if (cardapio[4] <= data_final) or (cardapio[5] <= data_final):
-                url = api + '/cardapios?' + '&' + cardapio[7]
-                r = requests.get(url)
-                refeicoes = r.json()
-
-                for refeicoes_dia in refeicoes:
-                    _keys = ['tipo_atendimento', 'tipo_unidade', 'agrupamento', 'idade', 'data', 'status']
-                    refeicao_dia_aux = [refeicoes_dia[_key] for _key in _keys]
-                    for refeicao in refeicoes_dia['cardapio'].keys():
-                        cardapio_aux.append(
-                            refeicao_dia_aux + [refeicao] + [', '.join(refeicoes_dia['cardapio'][refeicao])])
-
-    header = [['ATENDIMENTO', 'UNIDADE', 'AGRUPAMENTO', 'IDADE', 'DATA', 'STATUS', 'REFEICÃO', 'CARDÁPIO']]
-    cardapio_aux = header + cardapio_aux
-    csvlist = '\n'.join(['"' + str('";"'.join(row)) + '"' for row in cardapio_aux])
-    output = make_response(csvlist)
-    output.headers["Content-Disposition"] = "attachment; filename=agrupamento_publicações" + str(data_inicio_fim_str) + ".csv"
-    output.headers["Content-type"] = "text/csv; charset=utf-8'"
-
-    if request.form:
-        return output
+    if filtro == 'STATUS':
+        return render_template("download_publicações.html",
+                               data_inicio_fim=str(data_inicial + '-' + data_final))
     else:
-        return ('', 200)
+        cardapio_aux = []
+        for cardapio in get_grupo_publicacoes(filtro):
+            if (data_inicial <= cardapio[4]) or (data_inicial <= cardapio[5]):
+                if (cardapio[4] <= data_final) or (cardapio[5] <= data_final):
+                    url = api + '/cardapios?' + '&' + cardapio[7]
+                    r = requests.get(url)
+                    refeicoes = r.json()
+
+                    for refeicoes_dia in refeicoes:
+                        _keys = ['tipo_atendimento', 'tipo_unidade', 'agrupamento', 'idade', 'data', 'status']
+                        refeicao_dia_aux = [refeicoes_dia[_key] for _key in _keys]
+                        for refeicao in refeicoes_dia['cardapio'].keys():
+                            cardapio_aux.append(
+                                refeicao_dia_aux + [refeicao] + [', '.join(refeicoes_dia['cardapio'][refeicao])])
+
+        header = [['ATENDIMENTO', 'UNIDADE', 'AGRUPAMENTO', 'IDADE', 'DATA', 'STATUS', 'REFEICÃO', 'CARDÁPIO']]
+        cardapio_aux = header + cardapio_aux
+        csvlist = '\n'.join(['"' + str('";"'.join(row)) + '"' for row in cardapio_aux])
+        output = make_response(csvlist)
+        output.headers["Content-Disposition"] = "attachment; filename=agrupamento_publicações" + str(data_inicio_fim_str) + ".csv"
+        output.headers["Content-type"] = "text/csv; charset=utf-8'"
+
+        if request.form:
+            return output
+        else:
+            return ('', 200)
 
 
 # FUNÇÕES AUXILIARES

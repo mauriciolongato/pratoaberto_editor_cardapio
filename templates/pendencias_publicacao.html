@@ -125,7 +125,7 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-sm-4 dropdown" style="width: 15%">
+            <div class="col-sm-4 dropdown" style="width: 17%">
                 <label> Selecione a semana:</label>
                 <select class="form-control input"  id="filtro_semana" name="filtro_semana">
                     {% for semana in semanas: %}
@@ -191,6 +191,7 @@
                                     <th ></th>
                                     <th ></th>
                                     <th style="display: none;"></th>
+                                    <th style="display: none;"></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -210,6 +211,7 @@
                                     <td ><button class="btn btn-success publicar" value="PUBLICAR">PUBLICAR</button></td>
                                     <td ><a value="DELETAR" class="deletar"><i style="color:#D9534F;font-size:30px;text-align: center" class="fa">&#xf2d3;</i></a></td>
                                     <td class="url" style="display: none;">/cardapios?{{ linha[7] }}</td>
+                                    <td class="semana_inter" style="display: none;">{{ linha[4] }} - {{ linha[5] }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -402,7 +404,7 @@
         $(document).ready(function() {
             var semana_filtro = $('#filtro_semana').val()
             $('#task-table tr').not(':first').each(function() {
-                var semana_linha = $($(this).children('td')[1]).text()
+                var semana_linha = $($(this).children('td')[14]).text()
                 if (semana_linha == semana_filtro) {
                     $(this).show();
                 } else {
@@ -419,7 +421,7 @@
             $('#filtro_semana').change(function(){
                 var semana_filtro = $(this).val();
                 $('#task-table tr').not(':first').each(function() {
-                    var semana_linha = $($(this).children('td')[1]).text()
+                    var semana_linha = $($(this).children('td')[14]).text()
                     if (semana_linha == semana_filtro) {
                         $(this).show();
                     } else {

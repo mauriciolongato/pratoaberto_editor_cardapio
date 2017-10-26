@@ -139,7 +139,7 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-sm-4 dropdown" style="width: 15%">
+            <div class="col-sm-4 dropdown" style="width: 17%">
                 <label> Selecione a semana:</label>
                 <select class="form-control input"  id="filtro_semana" name="filtro_semana">
                     {% for semana in semanas: %}
@@ -179,11 +179,12 @@
                                     <th></th>
                                     <th></th>
                                     <th></th>
+                                    <th style="display: none;"></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for linha in pendentes: %}
-                                <tr class="item">
+                                <tr class="item" style="display: none;">
                                     <td class="ids" style="display: none;">{{ linha[9] }}</td>
                                     <td class="semana" style="display: none;">{{ linha[8] }}</td>
                                     <td class="tipo_gestao">{{ linha[0] }}</td>
@@ -196,6 +197,7 @@
                                     <td><a class="btn btn-info" href="/visualizador_cardapio?{{ linha[7] }}">VER</a></td>
                                     <td><button class="btn btn-warning pendente" value="PENDENTE">PENDENTE</button></td>
                                     <td><a value="DELETAR" class="deletar"><i style="color:#D9534F;font-size:30px;text-align: center" class="fa">&#xf2d3;</i></a></td>
+                                    <td class="semana_inter" style="display: none;">{{ linha[4] }} - {{ linha[5] }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -344,7 +346,7 @@
         $(document).ready(function() {
             var semana_filtro = $('#filtro_semana').val()
             $('#task-table tr').not(':first').each(function() {
-                var semana_linha = $($(this).children('td')[1]).text()
+                var semana_linha = $($(this).children('td')[12]).text()
                 if (semana_linha == semana_filtro) {
                     $(this).show();
                 } else {
@@ -361,7 +363,7 @@
             $('#filtro_semana').change(function(){
                 var semana_filtro = $(this).val();
                 $('#task-table tr').not(':first').each(function() {
-                    var semana_linha = $($(this).children('td')[1]).text()
+                    var semana_linha = $($(this).children('td')[12]).text()
                     if (semana_linha == semana_filtro) {
                         $(this).show();
                     } else {

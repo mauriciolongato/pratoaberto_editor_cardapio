@@ -99,12 +99,12 @@
                     <div class="navbar-header">
                         <a class="navbar-brand" href="#">Prato Aberto - Cardápios Terceirizadas</a>
                     </div>
-                    <form method="post" action="/atualiza_cardapio">
+                    <form method="post" id="post_json" action="/atualiza_cardapio">
                         <div class="collapse navbar-collapse">
                             <ul class="nav navbar-nav navbar-right">
                                 <button type="submit" class="btn btn-success">
                                     <i class="fa fa-upload" aria-hidden="true"></i> SALVAR XML</button>
-                                <input type="hidden" name="json_dump" id="json_dump" value="json_dump">
+                                <input type="hidden" name="json_dump" id="json_dump">
                                 <a type="button" class="btn btn-default " href="/">
                                     <span class="glyphicon glyphicon-chevron-left"></span> VOLTAR PARA CARDÁPIOS PENDENTES
                                 </a>
@@ -349,7 +349,7 @@
         function adicionaEdital() {
             var EDITAL = document.getElementById("EDITAL").value;
             $('#lista-editais').append(
-                "<span type='button' class='btn btn-default' onclick='deletar(this)' style='margin-right: 8px' id="+EDITAL+">"+EDITAL+" &times;</span>"
+                "<span type='button' class='btn btn-default' onclick='deletar(this)' style='margin-right: 8px' id='"+EDITAL+"'>"+EDITAL+" &times;</span>"
             );
         };
     </script>
@@ -359,7 +359,7 @@
         function adicionaEscola() {
             var TIPO_ESCOLA = document.getElementById("TIPO_ESCOLA").value;
             $('#lista-escolas').append(
-                "<span type='button' class='btn btn-default' onclick='deletar(this)' style='margin-right: 8px' id="+TIPO_ESCOLA+">"+TIPO_ESCOLA+" &times;</span>"
+                "<span type='button' class='btn btn-default' onclick='deletar(this)' style='margin-right: 8px' id='"+TIPO_ESCOLA+"'>"+TIPO_ESCOLA+" &times;</span>"
             );
         };
     </script>
@@ -369,7 +369,7 @@
         function adicionaIdade() {
             var IDADE = document.getElementById("IDADE").value;
             $('#lista-idade').append(
-                "<span type='button' class='btn btn-default' onclick='deletar(this)' style='margin-right: 8px' id="+IDADE+">"+IDADE+" &times;</span>"
+                "<span type='button' class='btn btn-default' onclick='deletar(this)' style='margin-right: 8px' id='"+IDADE+"'>"+IDADE+" &times;</span>"
             );
         };
     </script>
@@ -379,7 +379,7 @@
         function adicionaData() {
             var DATA = document.getElementById("data").value;
             $('#lista-datas').append(
-                "<span type='button' class='btn btn-default' onclick='deletar(this)' style='margin-right: 8px' id="+DATA+">"+DATA+" &times;</span>"
+                "<span type='button' class='btn btn-default' onclick='deletar(this)' style='margin-right: 8px' id='"+DATA+"'>"+DATA+" &times;</span>"
             );
         };
     </script>
@@ -388,8 +388,9 @@
     <script>
         function adicionaRefeicao() {
             var REFEICAO = document.getElementById("REFEICAO").value;
+            var ROW = "<span type='button' class='btn btn-default' onclick='deletar(this)' style='margin-right: 8px' id='"+REFEICAO+"'>"+REFEICAO+" &times;</span>"
             $('#lista-refeicao').append(
-                "<span type='button' class='btn btn-default' onclick='deletar(this)' style='margin-right: 8px' id="+REFEICAO+">"+REFEICAO+" &times;</span>"
+                ROW
             );
         };
     </script>
@@ -422,41 +423,48 @@
                     });
                 });
             });
-
-            json_dump = [];
-            /* Cria json de upload */
-            $('#lista-editais > span').each(function () {
-                var Edital = $(this).attr('id')
-                $('#lista-escolas > span').each(function () {
-                    var Escola = $(this).attr('id')
-                    $('#lista-idade > span').each(function () {
-                        var Idade = $(this).attr('id')
-                        $('#lista-datas > span').each(function () {
-                            var Data = $(this).attr('id')
-
-                            listaRefeicao = {};
-                            $('#lista-refeicao > span').each(function () {
-                                var Refeicao = $(this).attr('id')
-                                listaRefeicao[Refeicao] = []
-                            });
-
-                            var CardapioDia = {'status': 'PENDENTE', 'idade': Idade,
-                                'tipo_atendimento': 'TERCEIRIZADA', 'tipo_unidade': Escola,
-                                'data': Data, 'agrupamento': Edital,
-                                'cardapio_original': listaRefeicao,
-                                'cardapio': listaRefeicao
-                                };
-                            json_dump.push(CardapioDia);
-
-                        });
-                    });
-                });
-            });
-
-            /*window.alert(JSON.stringify(json_dump))*/
-            $('#json_dump').attr('value', JSON.stringify(json_dump))
         }
     </script>
+
+    <!-- Cria json da tabela -->
+    <script>
+       $('#post_json').submit(function() {
+            json_dump = [];
+            $('#task-table tr.item').each(function () {
+                var Escola = $($(this).children('td')[1]).text();
+                var Edital = $($(this).children('td')[2]).text();
+                var Idade = $($(this).children('td')[3]).text();
+                var Data = $($(this).children('td')[4]).text();
+
+                listaRefeicao = {};
+                $('#task-table tr.item').each(function () {
+                    if (Escola == $($(this).children('td')[1]).text()) {
+                        if (Edital == $($(this).children('td')[2]).text()){
+                            if (Idade == $($(this).children('td')[3]).text()){
+                                if (Data == $($(this).children('td')[4]).text()){
+                                    var Refeicao = $($(this).children('td')[5]).text();
+                                    listaRefeicao[Refeicao] = [];
+                                }
+                            }
+                        }
+                    }
+                });
+
+                var CardapioDia = {'status': 'PENDENTE', 'idade': Idade,
+                'tipo_atendimento': 'TERCEIRIZADA', 'tipo_unidade': Escola,
+                'data': Data, 'agrupamento': Edital,
+                'cardapio_original': listaRefeicao,
+                'cardapio': listaRefeicao
+                };
+                json_dump.push(CardapioDia);
+            });
+
+            $('#json_dump').attr('value', JSON.stringify(json_dump))
+
+            return true; // return false to cancel form action
+        });
+    </script>
+
 
 </body>
 </html>

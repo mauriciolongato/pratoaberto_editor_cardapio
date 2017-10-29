@@ -409,7 +409,7 @@ def atualiza_config_cardapio():
         return ('', 200)
 
 
-@app.route('/atualiza_escolas', methods=['GET'])
+@app.route('/escolas', methods=['GET'])
 def atualiza_escolas():
     if request.method == "GET":
         escolas = get_escolas()

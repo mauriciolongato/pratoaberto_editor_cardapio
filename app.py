@@ -409,6 +409,13 @@ def atualiza_config_cardapio():
         return ('', 200)
 
 
+@app.route('/atualiza_escolas', methods=['GET'])
+def atualiza_escolas():
+    if request.method == "GET":
+        escolas = get_escolas()
+        return render_template("configurações_escolas.html", escolas=escolas)
+
+
 @app.route("/download_publicacao", methods=["GET", "POST"])
 def publicacao():
     if request.method == "GET":
@@ -648,6 +655,14 @@ def get_publicados():
         pendente.append(','.join(_ids[_key]))
 
     return pendentes
+
+
+def get_escolas():
+    url = api + '/escolas'
+    r = requests.get(url)
+    escolas = r.json()
+
+    return escolas
 
 
 def get_grupo_publicacoes(status):

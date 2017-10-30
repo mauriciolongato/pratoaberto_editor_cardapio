@@ -13,9 +13,10 @@ import db_functions
 
 app = Flask(__name__)
 
-ip_teste_vitor = 'http://192.168.0.195:8000'
-ip_homolog = 'https://pratoaberto.tk/api'
-api = 'https://pratoaberto.tk/api'
+#ip_teste_vitor = 'http://192.168.0.195:8000'
+#ip_homolog = 'https://pratoaberto.tk/api'
+#api = 'https://pratoaberto.tk/api'
+api = 'http://pratoaberto.sme.prefeitura.sp.gov.br:8100'
 
 
 # api = ip_teste_vitor
@@ -410,10 +411,25 @@ def atualiza_config_cardapio():
 
 
 @app.route('/escolas', methods=['GET'])
-def atualiza_escolas():
+def escolas():
     if request.method == "GET":
         escolas = get_escolas()
         return render_template("configurações_escolas.html", escolas=escolas)
+
+
+@app.route('/atualiza_escolas', methods=['POST'])
+def atualiza_escolas():
+    data = request.form.get('json_dump', request.data)
+
+    # lista de informações modificadas na tabela de escolas
+    # 1. Comparar as modificações com os dados da API /escolas
+    # 2. Definir o que deve ser atualizado na base de dados
+    # 3. POST no endpoint
+
+    if request.form:
+        return (redirect(url_for('escolas')))
+    else:
+        return ('', 200)
 
 
 @app.route("/download_publicacao", methods=["GET", "POST"])
@@ -500,7 +516,7 @@ def data_semana_format(text):
 
 
 def get_cardapio(args):
-    url = api + '/cardapios?' + '&'.join(['%s=%s' % item for item in args.items()])
+    url = api + '/editor/cardapios?' + '&'.join(['%s=%s' % item for item in args.items()])
     r = requests.get(url)
     refeicoes = r.json()
 
@@ -508,7 +524,7 @@ def get_cardapio(args):
 
 
 def get_pendencias():
-    url = api + '/cardapios?status=PENDENTE&status=SALVO'
+    url = api + '/editor/cardapios?status=PENDENTE&status=SALVO'
     r = requests.get(url)
     refeicoes = r.json()
 
@@ -558,7 +574,7 @@ def get_pendencias():
 
 
 def get_deletados():
-    url = api + '/cardapios?status=DELETADO'
+    url = api + '/editor/cardapios?status=DELETADO'
     r = requests.get(url)
     refeicoes = r.json()
 
@@ -608,7 +624,7 @@ def get_deletados():
 
 
 def get_publicados():
-    url = api + '/cardapios?status=PUBLICADO'
+    url = api + '/editor/cardapios?status=PUBLICADO'
     r = requests.get(url)
     refeicoes = r.json()
 
@@ -658,7 +674,7 @@ def get_publicados():
 
 
 def get_escolas():
-    url = api + '/escolas'
+    url = api + '/escolas?completo'
     r = requests.get(url)
     escolas = r.json()
 
@@ -666,7 +682,7 @@ def get_escolas():
 
 
 def get_grupo_publicacoes(status):
-    url = api + '/cardapios?status=' + status
+    url = api + '/editor/cardapios?status=' + status
     r = requests.get(url)
     refeicoes = r.json()
 
@@ -721,7 +737,7 @@ def get_pendencias_terceirizadas():
 
 
 def get_cardapios_iguais():
-    url = api + '/cardapios?status=PENDENTE&status=SALVO'
+    url = api + '/editor/cardapios?status=PENDENTE&status=SALVO'
     r = requests.get(url)
     refeicoes = r.json()
 

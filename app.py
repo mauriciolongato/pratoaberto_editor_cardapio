@@ -19,8 +19,6 @@ app = Flask(__name__)
 api = 'http://pratoaberto.sme.prefeitura.sp.gov.br:8100'
 
 
-# api = ip_teste_vitor
-
 @app.route("/", methods=["GET", "POST"])
 def backlog():
     if request.method == "GET":
@@ -162,10 +160,6 @@ def calendario():
 
     # Monta json - Semana da requisicao
     jdata = get_cardapio(args)
-    #jdata = [d for d in jdata if d['tipo_atendimento'] in args['tipo_atendimento']]
-    #jdata = [d for d in jdata if d['idade'] in args['idade']]
-    #jdata = [d for d in jdata if d['tipo_unidade'] in args['tipo_unidade']]
-    #jdata = [d for d in jdata if str(d['agrupamento']) in args['agrupamento']]
 
     # Obtem data semana anterior
     args_semana_anterior = args.copy()
@@ -179,10 +173,6 @@ def calendario():
     args_semana_anterior['data_inicial'] = datetime.datetime.strftime(data_inicial_semana_anterior, '%Y%m%d')
     # Monta json - Semana anterior a da requisicao
     jdata_anterior = get_cardapio(args_semana_anterior)
-    #jdata_anterior = [d for d in jdata_anterior if d['tipo_atendimento'] in args_semana_anterior['tipo_atendimento']]
-    #jdata_anterior = [d for d in jdata_anterior if d['idade'] in args_semana_anterior['idade']]
-    #jdata_anterior = [d for d in jdata_anterior if d['tipo_unidade'] in args_semana_anterior['tipo_unidade']]
-    #jdata_anterior = [d for d in jdata_anterior if str(d['agrupamento']) in args_semana_anterior['agrupamento']]
 
     jdata_aux = []
     for cardapio_atual in jdata:
@@ -420,16 +410,99 @@ def escolas():
 @app.route('/atualiza_escolas', methods=['POST'])
 def atualiza_escolas():
     data = request.form.get('json_dump', request.data)
+    data = json.loads(data)
 
-    # lista de informações modificadas na tabela de escolas
-    # 1. Comparar as modificações com os dados da API /escolas
-    # 2. Definir o que deve ser atualizado na base de dados
-    # 3. POST no endpoint
+    for escola_mod in data:
+        escola_atual = get_escola(escola_mod['_id'])
+        escola_atual['_id'] = int(escola_mod['_id'])
+        if 'edital' not in escola_atual:
+            escola_atual['edital'] = ''
 
-    if request.form:
-        return (redirect(url_for('escolas')))
-    else:
-        return ('', 200)
+        if 'data_inicio_vigencia' not in escola_atual:
+            escola_atual['data_inicio_vigencia'] = ''
+
+        if escola_atual['nome'] != escola_mod['nome']:
+            escola_atual['nome'] = escola_mod['nome']
+
+        if escola_atual['endereco'] != escola_mod['endereco']:
+            escola_atual['endereco'] = escola_mod['endereco']
+
+        if escola_atual['bairro'] != escola_mod['bairro']:
+            escola_atual['bairro'] = escola_mod['bairro']
+
+        try:
+            escola_mod['lat'] = float(escola_mod['lat'])
+            escola_mod['lon'] = float(escola_mod['lon'])
+        except:
+            pass
+
+        if escola_atual['lat'] != escola_mod['lat']:
+            escola_atual['lat'] = escola_mod['lat']
+
+        if escola_atual['lon'] != escola_mod['lon']:
+            escola_atual['lon'] = escola_mod['lon']
+
+        try:
+            escola_mod['agrupamento'] = int(escola_mod['agrupamento'])
+        except:
+            pass
+
+        flag_unidade = (escola_atual['tipo_unidade'] != escola_mod['tipo_unidade'])
+        flag_atendimento = (escola_atual['tipo_atendimento'] != escola_mod['tipo_atendimento'])
+        flag_agrupamento = (escola_atual['agrupamento'] != escola_mod['agrupamento'])
+        flag_edital = (escola_atual['edital'] != escola_mod['edital'])
+
+        if flag_unidade or flag_atendimento or flag_agrupamento or flag_edital:
+            flag_historico = True
+        else:
+            flag_historico = False
+
+        if flag_historico == True:
+            if escola_mod['data_inicio_vigencia'] == '':
+                flash('Para essas modificações, é necessario definir a data de inicio da vigência das modificações! No campo "data" coloque a informação no formato aaaammdd')
+                return redirect(url_for('escolas'))
+            else:
+                try:
+                    data = datetime.datetime.strptime(escola_mod['data_inicio_vigencia'], '%Y%m%d')
+                except:
+                    flash('Formato da data inválido. No campo "data" coloque a informação no formato aaaammdd')
+                    return redirect(url_for('escolas'))
+
+            if 'historico' in escola_atual:
+                escola_atual['historico'].append({'data_inicio_vigencia': escola_mod['data_inicio_vigencia'],
+                                                  'tipo_unidade': escola_atual['tipo_unidade'],
+                                                  'tipo_atendimento': escola_atual['tipo_atendimento'],
+                                                  'agupamento': escola_atual['agrupamento'],
+                                                  'edital': escola_atual['edital']
+                                                  })
+                escola_atual['tipo_unidade'] = escola_mod['tipo_unidade']
+                escola_atual['tipo_atendimento'] = escola_mod['tipo_atendimento']
+                escola_atual['agrupamento'] = escola_mod['agrupamento']
+                escola_atual['edital'] = escola_mod['edital']
+                escola_atual['data_inicio_vigencia'] = escola_mod['data_inicio_vigencia']
+
+            else:
+                escola_atual['historico'] = []
+                escola_atual['historico'].append({'data_inicio_vigencia': escola_mod['data_inicio_vigencia'],
+                                                  'tipo_unidade': escola_atual['tipo_unidade'],
+                                                  'tipo_atendimento': escola_atual['tipo_atendimento'],
+                                                  'agupamento': escola_atual['agrupamento'],
+                                                  'edital': escola_atual['edital']
+                                                  })
+                escola_atual['tipo_unidade'] = escola_mod['tipo_unidade']
+                escola_atual['tipo_atendimento'] = escola_mod['tipo_atendimento']
+                escola_atual['agrupamento'] = escola_mod['agrupamento']
+                escola_atual['edital'] = escola_mod['edital']
+                escola_atual['data_inicio_vigencia'] = escola_mod['data_inicio_vigencia']
+
+        headers = {'Content-type': 'application/json'}
+        escola_atual = json.dumps(escola_atual)
+        r = requests.post(api + '/editor/escola/{}'.format(str(escola_atual['_id'])), data=escola_atual, headers=headers)
+
+        if request.form:
+            return (redirect(url_for('escolas')))
+        else:
+            return ('', 200)
 
 
 @app.route("/download_publicacao", methods=["GET", "POST"])
@@ -679,6 +752,14 @@ def get_escolas():
     escolas = r.json()
 
     return escolas
+
+
+def get_escola(cod_eol):
+    url = api + '/escola/{}'.format(cod_eol)
+    r = requests.get(url)
+    escola = r.json()
+
+    return escola
 
 
 def get_grupo_publicacoes(status):

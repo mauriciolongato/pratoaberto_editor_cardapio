@@ -217,7 +217,7 @@ def calendario():
                                                            args['idade'])
 
         return render_template("editor_terceirizadas.html",
-                               url=api + '/cardapios',
+                               url=api + '/editor/cardapios',
                                cardapios=cardapios,
                                tipo_atendimento=args['tipo_atendimento'],
                                tipo_unidade=args['tipo_unidade'],
@@ -227,7 +227,7 @@ def calendario():
 
     else:
         return render_template("editor_direto_misto_conveniada.html",
-                               url=api + '/cardapios',
+                               url=api + '/editor/cardapios',
                                cardapios=jdata,
                                tipo_atendimento=args['tipo_atendimento'],
                                tipo_unidade=args['tipo_unidade'],
@@ -253,7 +253,7 @@ def visualizador():
         cardapios.append(cardapio)
 
     return render_template("visualizador_cardapio.html",
-                           url=api + '/cardapios',
+                           url=api + '/editor/cardapios',
                            cardapios=jdata,
                            tipo_atendimento=args['tipo_atendimento'],
                            tipo_unidade=args['tipo_unidade'],
@@ -344,14 +344,14 @@ def calendario_grupo_cardapio():
                                                            lista_args[0]['idade'])
 
         return render_template("editor_grupo_terceirizadas.html",
-                               url=api + '/cardapios',
+                               url=api + '/editor/cardapios',
                                cardapios=cardapios,
                                args=lista_args,
                                historicos_cardapios=historicos_cardapios)
 
     else:
         return render_template("editor_grupo_direto_misto_conveniada.html",
-                               url=api + '/cardapios',
+                               url=api + '/editor/cardapios',
                                cardapios=cardapios,
                                args=lista_args,
                                depara=depara)
@@ -545,7 +545,7 @@ def publicacao():
             for cardapio in get_grupo_publicacoes(filtro):
                 if (data_inicial <= cardapio[4]) or (data_inicial <= cardapio[5]):
                     if (cardapio[4] <= data_final) or (cardapio[5] <= data_final):
-                        url = api + '/cardapios?' + '&' + cardapio[7]
+                        url = api + '/editor/cardapios?' + '&' + cardapio[7]
                         r = requests.get(url)
                         refeicoes = r.json()
 
@@ -576,7 +576,7 @@ def download_csv():
         for cardapio in get_grupo_publicacoes(filtro):
             if (data_inicial <= cardapio[4]) or (data_inicial <= cardapio[5]):
                 if (cardapio[4] <= data_final) or (cardapio[5] <= data_final):
-                    url = api + '/cardapios?' + '&' + cardapio[7]
+                    url = api + '/editor/cardapios?' + '&' + cardapio[7]
                     r = requests.get(url)
                     refeicoes = r.json()
 

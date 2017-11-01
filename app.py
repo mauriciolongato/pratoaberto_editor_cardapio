@@ -16,7 +16,8 @@ app = Flask(__name__)
 #ip_teste_vitor = 'http://192.168.0.195:8000'
 #ip_homolog = 'https://pratoaberto.tk/api'
 #api = 'https://pratoaberto.tk/api'
-api = 'http://pratoaberto.sme.prefeitura.sp.gov.br:8100'
+# api = 'http://pratoaberto.sme.prefeitura.sp.gov.br:8100'
+api = 'https://pratoaberto.sme.prefeitura.sp.gov.br/api'
 
 
 @app.route("/", methods=["GET", "POST"])

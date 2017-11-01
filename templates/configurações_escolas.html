@@ -89,6 +89,7 @@
                 </div>
             </nav>
         </div>
+
         <div class="row">
             <button onclick="addRow()" class="btn btn-primary" style="float: right"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button>
         </div>
@@ -111,11 +112,13 @@
                         <table class="table table-hover table-striped" id="task-table">
                             <thead>
                                 <tr>
+                                    <th style="word-wrap: break-word;"></th>
+                                    <th style="word-wrap: break-word;"></th>
                                     <th style="word-wrap: break-word;">COD_EOL</th>
                                     <th style="word-wrap: break-word;">GESTÃO</th>
                                     <th style="word-wrap: break-word;min-width: 150px;max-width: 150px;">ESCOLA</th>
                                     <th style="word-wrap: break-word;">AGRUPAMENTO</th>
-                                    <th style="word-wrap: break-word;">EDITAL</th>
+                                    <th style="word-wrap: break-word;min-width: 150px;max-width: 150px;">EDITAL</th>
                                     <th style="word-wrap: break-word;">DATA</th>
                                     <th style="word-wrap: break-word;min-width: 400px;max-width: 400px;">NOME</th>
                                     <th style="word-wrap: break-word;min-width: 400px;max-width: 400px;">ENDEREÇO</th>
@@ -128,18 +131,19 @@
                             <tbody>
                                 {% for linha in escolas: %}
                                 <tr class="item" id="{{ linha['_id'] }}">
+                                    <td><a class="btn btn-info" onclick='showRow(this)' href="#">EDITAR</a></td>
+                                    <td><a value='Delete' onclick='deleteRow(this)'><i style='color:#D9534F;font-size:30px;text-align: center' class='fa'></i></a></td>
                                     <td class="cod_eol">{{ linha['_id'] }}</td>
                                     <td class="tipo_atendimento" contenteditable="true">{{ linha['tipo_atendimento'] }}</td>
                                     <td class="tipo_unidade" contenteditable="true">{{ linha['tipo_unidade'] }}</td>
                                     <td class="agrupamento" contenteditable="true">{{ linha['agrupamento'] }}</td>
-                                    <td class="edital" contenteditable="true">{{ linha['agrupamento'] }}</td>
-                                    <td class="data" contenteditable="true"></td>
+                                    <td class="edital" contenteditable="true">{{ linha['edital'] }}</td>
+                                    <td class="data" contenteditable="true">{{ linha['data_inicio_vigencia'] }}</td>
                                     <td class="nome" contenteditable="true">{{ linha['nome'] }}</td>
                                     <td class="endereco" contenteditable="true">{{ linha['endereco'] }}</td>
                                     <td class="bairro" contenteditable="true">{{ linha['bairro'] }}</td>
                                     <td class="lat" contenteditable="true">{{ linha['lat'] }}</td>
                                     <td class="lon" contenteditable="true">{{ linha['lon'] }}</td>
-                                    <td><a value='Delete' onclick='deleteRow(this)'><i style='color:#D9534F;font-size:30px;text-align: center' class='fa'></i></a></td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -282,7 +286,7 @@
                     $this.trigger('change');
                 }
                 var row = $this.closest('tr');
-                var cod_eol_modificacao = $($(row).children('td')[0]).text();
+                var cod_eol_modificacao = $($(row).children('td')[2]).text();
                 $('#lista-modificacoes').append(
                     "<tr class='item' style='display:none'>"+
                     "<td>"+cod_eol_modificacao+"</td>"+
@@ -303,18 +307,18 @@
 
             $('#task-table tr.item').each(function () {
                 for (var key in lista_codigo_eol_modificacoes) {
-                    if (key == $($(this).children('td')[0]).text()) {
-                        var cod_eol = $($(this).children('td')[0]).text();
-                        var tipo_atendimento = $($(this).children('td')[1]).text();
-                        var tipo_unidade = $($(this).children('td')[2]).text();
-                        var agrupamento = $($(this).children('td')[3]).text();
-                        var edital = $($(this).children('td')[4]).text();
-                        var data = $($(this).children('td')[5]).text();
-                        var nome = $($(this).children('td')[6]).text();
-                        var endereco = $($(this).children('td')[7]).text();
-                        var bairro = $($(this).children('td')[8]).text();
-                        var lat = $($(this).children('td')[9]).text();
-                        var lon = $($(this).children('td')[10]).text();
+                    if (key == $($(this).children('td')[2]).text()) {
+                        var cod_eol = $($(this).children('td')[2]).text();
+                        var tipo_atendimento = $($(this).children('td')[3]).text();
+                        var tipo_unidade = $($(this).children('td')[4]).text();
+                        var agrupamento = $($(this).children('td')[5]).text();
+                        var edital = $($(this).children('td')[6]).text();
+                        var data = $($(this).children('td')[7]).text();
+                        var nome = $($(this).children('td')[8]).text();
+                        var endereco = $($(this).children('td')[9]).text();
+                        var bairro = $($(this).children('td')[10]).text();
+                        var lat = $($(this).children('td')[11]).text();
+                        var lon = $($(this).children('td')[12]).text();
                         modificacao = {
                             '_id' : cod_eol,
                             'nome': nome,
@@ -340,6 +344,19 @@
 
     </script>
 
+
+    <!-- Show histórico de modificações -->
+    <script>
+        function showRow(r) {
+            var cod_eol = $($($(r).closest('tr')).children('td')[2]).text()
+            $('#task-table tr').not(':first').each(function() {
+                var semana_linha = $($(this).children('td')[2]).text()
+                if (semana_linha == cod_eol) {
+                    $(this).show();
+                }
+            });
+        }
+    </script>
 
 
 </body>

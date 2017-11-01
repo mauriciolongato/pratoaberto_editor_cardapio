@@ -5,8 +5,8 @@ import db_functions
 import itertools
 
 
-api = 'https://pratoaberto.tk/api'
-
+# api = 'https://pratoaberto.tk/api'
+api = 'http://pratoaberto.sme.prefeitura.sp.gov.br:8100'
 
 def dia_semana(dia):
     diasemana = ('Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom')
@@ -109,6 +109,32 @@ def open_csv():
 
     db_functions.add_bulk_cardapio(objects)
 
+
+def get_escola(cod_eol):
+    url = api + '/escola/{}'.format(cod_eol)
+    r = requests.get(url)
+    escola = r.json()
+
+    return escola
+
+
+def get_escolas():
+    url = api + '/escolas?completo'
+    r = requests.get(url)
+    escolas = r.json()
+
+    return escolas
+
+
 if __name__ == '__main__':
-    db_functions.truncate_receitas_terceirizadas()
-    open_csv()
+    # db_functions.truncate_receitas_terceirizadas()
+    # open_csv()
+    import json
+
+    escolas = get_escolas()
+    cod_eol = [91065, 19235, 90891]
+    escolas_f = [x for x in escolas if x['_id'] in cod_eol]
+
+    for cod_eol in ['19235']:
+        print(json.dumps(get_escola(str(cod_eol))['historico']))
+        print('\n')

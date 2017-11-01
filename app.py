@@ -42,7 +42,6 @@ def backlog():
 def deletados():
     if request.method == "GET":
         deletados = get_deletados()
-        #semanas = sorted(set([x[8] for x in deletados]), reverse=True)
         semanas = sorted(set([str(x[4]) + ' - ' + str(x[5]) for x in deletados]), reverse=True)
         return render_template("pendencias_deletadas.html",
                                pendentes=deletados,
@@ -53,7 +52,6 @@ def deletados():
 def publicados():
     if request.method == "GET":
         publicados = get_publicados()
-        #semanas = sorted(set([x[8] for x in publicados]), reverse=True)
         semanas = sorted(set([str(x[4]) + ' - ' + str(x[5]) for x in publicados]), reverse=True)
         return render_template("pendencias_publicadas.html",
                                pendentes=publicados,
@@ -98,7 +96,7 @@ def upload_file():
                                             '&'.join(['%s=%s' % item for item in query.items()]),
                                             '&'.join(
                                                 ['status=%s' % item for item in ['PUBLICADO', 'SALVO', 'PENDENTE']]))
-                                    responses[_key] = requests.get('{}/cardapios/{}?{}&{}'.format(*args)).json()
+                                    responses[_key] = requests.get('{}/editor/cardapios/{}?{}&{}'.format(*args)).json()
 
                                 cardapio = query
                                 cardapio['data'] = data
@@ -145,7 +143,7 @@ def cria_terceirizada():
 def atualiza_cardapio():
     headers = {'Content-type': 'application/json'}
     data = request.form.get('json_dump', request.data)
-    r = requests.post(api + '/cardapios', data=data, headers=headers)
+    r = requests.post(api + '/editor/cardapios', data=data, headers=headers)
 
     if request.form:
         return (redirect(url_for('backlog')))
@@ -157,6 +155,8 @@ comments = []
 @app.route("/calendario", methods=["GET"])
 def calendario():
     args = request.args
+    depara = db_functions.select_all()
+    depara = [x[3:5] for x in depara if x[1] == 'TEMPEROS' and x[2] == 'INGREDIENTES']
 
     # Monta json - Semana da requisicao
     jdata = get_cardapio(args)
@@ -196,8 +196,6 @@ def calendario():
     for dia in dias_da_semana:
         cardapio_atual = filtro_dicionarios(jdata, 'dia_semana', dia)
         cardapio_anterior = filtro_dicionarios(jdata_anterior, 'dia_semana', dia)
-        depara = db_functions.select_all()
-        depara = [x[3:5] for x in depara if x[1] == 'TEMPEROS' and x[2] == 'INGREDIENTES']
 
         if cardapio_atual and cardapio_anterior:
             cardapio_atual['cardapio_semana_anterior'] = cardapio_anterior['cardapio']
@@ -412,7 +410,11 @@ def atualiza_escolas():
     data = request.form.get('json_dump', request.data)
     data = json.loads(data)
 
+    erro_falta_data = False
+    erro_data = False
+
     for escola_mod in data:
+
         escola_atual = get_escola(escola_mod['_id'])
         escola_atual['_id'] = int(escola_mod['_id'])
         if 'edital' not in escola_atual:
@@ -459,14 +461,15 @@ def atualiza_escolas():
 
         if flag_historico == True:
             if escola_mod['data_inicio_vigencia'] == '':
-                flash('Para essas modificações, é necessario definir a data de inicio da vigência das modificações! No campo "data" coloque a informação no formato aaaammdd')
-                return redirect(url_for('escolas'))
+                erro_falta_data = True
+
             else:
+                erro_falta_data = False
                 try:
+                    erro_data = False
                     data = datetime.datetime.strptime(escola_mod['data_inicio_vigencia'], '%Y%m%d')
                 except:
-                    flash('Formato da data inválido. No campo "data" coloque a informação no formato aaaammdd')
-                    return redirect(url_for('escolas'))
+                    erro_data = True
 
             if 'historico' in escola_atual:
                 escola_atual['historico'].append({'data_inicio_vigencia': escola_mod['data_inicio_vigencia'],
@@ -495,14 +498,26 @@ def atualiza_escolas():
                 escola_atual['edital'] = escola_mod['edital']
                 escola_atual['data_inicio_vigencia'] = escola_mod['data_inicio_vigencia']
 
-        headers = {'Content-type': 'application/json'}
-        escola_atual = json.dumps(escola_atual)
-        r = requests.post(api + '/editor/escola/{}'.format(str(escola_atual['_id'])), data=escola_atual, headers=headers)
 
-        if request.form:
+        if (erro_data == False) and (erro_falta_data == False):
+            headers = {'Content-type': 'application/json'}
+            r = requests.post(api + '/editor/escola/{}'.format(str(escola_atual['_id'])),
+                              data=json.dumps(escola_atual),
+                              headers=headers)
+        else:
+            pass
+
+    if request.form:
+        if erro_falta_data:
+            flash('Para essas modificações, é necessario definir a data de inicio da vigência das modificações! No campo "data" coloque a informação no formato aaaammdd')
+            return (redirect(url_for('escolas')))
+        elif erro_data:
+            flash('Formato da data inválido. No campo "data" coloque a informação no formato aaaammdd')
             return (redirect(url_for('escolas')))
         else:
-            return ('', 200)
+            return (redirect(url_for('escolas')))
+    else:
+        return ('', 200)
 
 
 @app.route("/download_publicacao", methods=["GET", "POST"])

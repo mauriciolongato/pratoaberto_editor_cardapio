@@ -398,14 +398,16 @@ def atualiza_config_cardapio():
         return ('', 200)
 
 
-@app.route('/escolas', methods=['GET'])
+# @app.route('/escolas', methods=['GET'])
+@app.route('/escolas_out', methods=['GET'])
 def escolas():
     if request.method == "GET":
         escolas = get_escolas()
         return render_template("configurações_escolas.html", escolas=escolas)
 
 
-@app.route('/atualiza_escolas', methods=['POST'])
+# @app.route('/atualiza_escolas', methods=['POST'])
+@app.route('/atualiza_escolas_out', methods=['POST'])
 def atualiza_escolas():
     data = request.form.get('json_dump', request.data)
     data = json.loads(data)

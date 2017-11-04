@@ -130,8 +130,8 @@
                 <div class="col-sm-4">
                     <div class="form-inline" style="width: 100%">
                         <div class="form-group">
-                            <label class="sr-only" for="data">De</label>
-                            <input type="text" class="form-control" id="data" placeholder="Ex: 20170925">
+                            <label class="sr-only" for="data">Data:</label>
+                            <input type="text" id="data" name="data-inicial" value="Data" class="form-control">
                             <button onclick="adicionaData()" class="btn btn-primary">+ DATA</button>
                         </div>
                     </div>
@@ -479,6 +479,21 @@
             json_dump.push(cardapio);
             $('#json_dump').attr('value', JSON.stringify(json_dump))
             return true; // return false to cancel form action
+        });
+    </script>
+
+    <!-- Datepicker -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.7.1/js/bootstrap-datepicker.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+
+    <!--Data Picker-->
+    <script>
+        $(document).ready(function () {
+            $('#data').datepicker({
+                format: "yyyymmdd",
+                language: "pt-BR"
+            });
         });
     </script>
 

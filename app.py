@@ -528,6 +528,17 @@ def atualiza_escolas():
 def atualiza_historico_escolas():
     data = request.form.get('json_dump', request.data)
     data = json.loads(data)
+
+    # Vefificações
+    # 1. Todas as linhas devem ter o mesmo código EOL
+
+    # 2. Se existir mais de 1 registro, todas as linhas devem conter os campos Data preenchidos:
+
+    # 3. Se gestão for terceirizada, o campo Edital é obrigatório
+
+    # 4. Se 
+
+
     return
 
 

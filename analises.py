@@ -6,7 +6,8 @@ import itertools
 
 
 # api = 'https://pratoaberto.tk/api'
-api = 'http://pratoaberto.sme.prefeitura.sp.gov.br:8100'
+# api = 'http://pratoaberto.sme.prefeitura.sp.gov.br:8100'
+api = 'https://pratoaberto.sme.prefeitura.sp.gov.br/api'
 
 def dia_semana(dia):
     diasemana = ('Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom')
@@ -126,15 +127,25 @@ def get_escolas():
     return escolas
 
 
+def post_cardapio():
+    api = 'https://pratoaberto.sme.prefeitura.sp.gov.br/api'
+    headers = {'Content-type': 'application/json'}
+    jdata = '[{"_id":{"$oid":"59fa66a454e6253592047a8b"}, "idade": "Z - UNIDADES SEM FAIXA", "data": "20171101", "status":"PENDENTE"}]'
+    r = requests.post(api + '/editor/cardapios', data=jdata, headers=headers)
+
+
 if __name__ == '__main__':
     # db_functions.truncate_receitas_terceirizadas()
     # open_csv()
     import json
 
+    post_cardapio()
     escolas = get_escolas()
-    cod_eol = [91065, 19235, 90891]
-    escolas_f = [x for x in escolas if x['_id'] in cod_eol]
-
+    # cod_eol = [91065, 19235, 90891]
+    # escolas_f = [x for x in escolas if x['_id'] in cod_eol]
+    escolas_eol = set([x['_id'] for x in escolas])
+    print(len(escolas_eol))
+    print(escolas_eol)
     for cod_eol in ['19235']:
         print(json.dumps(get_escola(str(cod_eol))['historico']))
         print('\n')

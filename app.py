@@ -15,7 +15,7 @@ app = Flask(__name__)
 
 #ip_teste_vitor = 'http://192.168.0.195:8000'
 #ip_homolog = 'https://pratoaberto.tk/api'
-#api = 'https://pratoaberto.tk/api'
+# api = 'https://pratoaberto.tk/api'
 # api = 'http://pratoaberto.sme.prefeitura.sp.gov.br:8100'
 api = 'https://pratoaberto.sme.prefeitura.sp.gov.br/api'
 
@@ -210,6 +210,7 @@ def calendario():
             elif cardapio_anterior:
                 cardapio_atual['cardapio_semana_anterior'] = []
                 cardapios.append(cardapio_atual)
+
     if args['tipo_atendimento'] == 'TERCEIRIZADA':
         historicos_cardapios = get_cardapios_terceirizadas(args['tipo_atendimento'],
                                                            args['tipo_unidade'],
@@ -399,16 +400,16 @@ def atualiza_config_cardapio():
         return ('', 200)
 
 
-# @app.route('/escolas', methods=['GET'])
-@app.route('/escolas_out', methods=['GET'])
+# @app.route('/escolas_out', methods=['GET'])
+@app.route('/escolas', methods=['GET'])
 def escolas():
     if request.method == "GET":
         escolas = get_escolas()
         return render_template("configurações_escolas.html", escolas=escolas)
 
 
-# @app.route('/atualiza_escolas', methods=['POST'])
-@app.route('/atualiza_escolas_out', methods=['POST'])
+# @app.route('/atualiza_escolas_out', methods=['POST'])
+@app.route('/atualiza_escolas', methods=['POST'])
 def atualiza_escolas():
     data = request.form.get('json_dump', request.data)
     data = json.loads(data)
@@ -521,6 +522,13 @@ def atualiza_escolas():
             return (redirect(url_for('escolas')))
     else:
         return ('', 200)
+
+
+@app.route('/atualiza_historico_escolas', methods=['POST'])
+def atualiza_historico_escolas():
+    data = request.form.get('json_dump', request.data)
+    data = json.loads(data)
+    return
 
 
 @app.route("/download_publicacao", methods=["GET", "POST"])

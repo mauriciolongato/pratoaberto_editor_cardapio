@@ -273,65 +273,65 @@
 
     <!-- Script com a funcionalidade do filtro da tabela -->
     <script>
-    /**
-    *   I don't recommend using this plugin on large tables, I just wrote it to make the demo useable. It will work fine for smaller tables
-    *   but will likely encounter performance issues on larger tables.
-    *
-    *       <input type="text" class="form-control" id="dev-table-filter" data-action="filter" data-filters="#dev-table" placeholder="Filter Developers" />
-    *       $(input-element).filterTable()
-    *
-    *   The important attributes are 'data-action="filter"' and 'data-filters="#table-selector"'
-    */
-    (function(){
-        'use strict';
-        var $ = jQuery;
-        $.fn.extend({
-            filterTable: function(){
-                return this.each(function(){
-                    $(this).on('keyup', function(e){
-                        $('.filterTable_no_results').remove();
-                        var $this = $(this),
-                            search = $this.val().toLowerCase(),
-                            target = $this.attr('data-filters'),
-                            $target = $(target),
-                            $rows = $target.find('tbody tr');
+        /**
+        *   I don't recommend using this plugin on large tables, I just wrote it to make the demo useable. It will work fine for smaller tables
+        *   but will likely encounter performance issues on larger tables.
+        *
+        *       <input type="text" class="form-control" id="dev-table-filter" data-action="filter" data-filters="#dev-table" placeholder="Filter Developers" />
+        *       $(input-element).filterTable()
+        *
+        *   The important attributes are 'data-action="filter"' and 'data-filters="#table-selector"'
+        */
+        (function(){
+            'use strict';
+            var $ = jQuery;
+            $.fn.extend({
+                filterTable: function(){
+                    return this.each(function(){
+                        $(this).on('keyup', function(e){
+                            $('.filterTable_no_results').remove();
+                            var $this = $(this),
+                                search = $this.val().toLowerCase(),
+                                target = $this.attr('data-filters'),
+                                $target = $(target),
+                                $rows = $target.find('tbody tr');
 
-                        if(search == '') {
-                            $rows.show();
-                        } else {
-                            $rows.each(function(){
-                                var $this = $(this);
-                                $this.text().toLowerCase().indexOf(search) === -1 ? $this.hide() : $this.show();
-                            })
-                            if($target.find('tbody tr:visible').size() === 0) {
-                                var col_count = $target.find('tr').first().find('td').size();
-                                var no_results = $('<tr class="filterTable_no_results"><td colspan="'+col_count+'">No results found</td></tr>')
-                                $target.find('tbody').append(no_results);
+                            if(search == '') {
+                                $rows.show();
+                            } else {
+                                $rows.each(function(){
+                                    var $this = $(this);
+                                    $this.text().toLowerCase().indexOf(search) === -1 ? $this.hide() : $this.show();
+                                })
+                                if($target.find('tbody tr:visible').size() === 0) {
+                                    var col_count = $target.find('tr').first().find('td').size();
+                                    var no_results = $('<tr class="filterTable_no_results"><td colspan="'+col_count+'">No results found</td></tr>')
+                                    $target.find('tbody').append(no_results);
+                                }
                             }
-                        }
+                        });
                     });
-                });
-            }
+                }
+            });
+            $('[data-action="filter"]').filterTable();
+        })(jQuery);
+
+        $(function(){
+            // attach table filter plugin to inputs
+            $('[data-action="filter"]').filterTable();
+
+            $('.container').on('click', '.panel-heading span.filter', function(e){
+                var $this = $(this),
+                    $panel = $this.parents('.panel');
+
+                $panel.find('.panel-body').slideToggle();
+                if($this.css('display') != 'none') {
+                    $panel.find('.panel-body input').focus();
+                }
+            });
+            $('[data-toggle="tooltip"]').tooltip();
         });
-        $('[data-action="filter"]').filterTable();
-    })(jQuery);
-
-    $(function(){
-        // attach table filter plugin to inputs
-        $('[data-action="filter"]').filterTable();
-
-        $('.container').on('click', '.panel-heading span.filter', function(e){
-            var $this = $(this),
-                $panel = $this.parents('.panel');
-
-            $panel.find('.panel-body').slideToggle();
-            if($this.css('display') != 'none') {
-                $panel.find('.panel-body input').focus();
-            }
-        });
-        $('[data-toggle="tooltip"]').tooltip();
-    });
-</script>
+    </script>
 
     <!-- Botões de ordenação da tabela -->
     <script src="static/js/w3.js"></script>
@@ -428,39 +428,56 @@
 
     <!-- Cria json da tabela -->
     <script>
-       $('#post_json').submit(function() {
-            json_dump = [];
-            $('#task-table tr.item').each(function () {
-                var Escola = $($(this).children('td')[1]).text();
-                var Edital = $($(this).children('td')[2]).text();
-                var Idade = $($(this).children('td')[3]).text();
-                var Data = $($(this).children('td')[4]).text();
+        $('#post_json').submit(function() {
+            var json_dump = [];
+            var cardapio = {};
+            var quebra = {};
+            var quebra_anterior = {};
+            var lista_refeicao = {};
 
-                listaRefeicao = {};
-                $('#task-table tr.item').each(function () {
-                    if (Escola == $($(this).children('td')[1]).text()) {
-                        if (Edital == $($(this).children('td')[2]).text()){
-                            if (Idade == $($(this).children('td')[3]).text()){
-                                if (Data == $($(this).children('td')[4]).text()){
-                                    var Refeicao = $($(this).children('td')[5]).text();
-                                    listaRefeicao[Refeicao] = [];
-                                }
-                            }
-                        }
-                    }
-                });
-
-                var CardapioDia = {'status': 'PENDENTE', 'idade': Idade,
-                'tipo_atendimento': 'TERCEIRIZADA', 'tipo_unidade': Escola,
-                'data': Data, 'agrupamento': Edital,
-                'cardapio_original': listaRefeicao,
-                'cardapio': listaRefeicao
+            $('#task-table tr.item').each(function (idx, elm) {
+                quebra = {
+                    'tipo_unidade': $($(this).children('td')[1]).text(),
+                    'agrupamento': $($(this).children('td')[2]).text(),
+                    'data': $($(this).children('td')[4]).text(),
+                    'idade': $($(this).children('td')[3]).text()
                 };
-                json_dump.push(CardapioDia);
+                //testa quebra contra quebra_anterior
+                if (JSON.stringify(quebra_anterior) === JSON.stringify(quebra) || idx == 0) {
+                    // se igual ou se é a primeira linha, adiciona a refeicao a lista de refeicoes
+                    lista_refeicao[$($(this).children('td')[5]).text()] = [];
+                }
+                else {
+                    // se diferente, a ultima quebra finalizou e deve ser salva
+                    cardapio = {
+                        'status': 'PENDENTE',
+                        'tipo_atendimento': 'TERCEIRIZADA',
+                        'tipo_unidade': quebra['tipo_unidade'],
+                        'agrupamento': quebra['agrupamento'],
+                        'data': quebra['data'],
+                        'idade': quebra['idade'],
+                        'cardapio_original': lista_refeicao,
+                        'cardapio': lista_refeicao
+                    };
+                    json_dump.push((cardapio));
+                    //reinicia lista_refeicao
+                    lista_refeicao = {};
+                }
+                quebra_anterior = quebra;
             });
-
+            //adiciona a ultima quebra, já que ela nunca passara pelo teste de diferença vs quebra_anterior
+            cardapio = {
+                'status': 'PENDENTE',
+                'tipo_atendimento': 'TERCEIRIZADA',
+                'tipo_unidade': quebra['tipo_unidade'],
+                'agrupamento': quebra['agrupamento'],
+                'data': quebra['data'],
+                'idade': quebra['idade'],
+                'cardapio_original': lista_refeicao,
+                'cardapio': lista_refeicao
+            };
+            json_dump.push(cardapio);
             $('#json_dump').attr('value', JSON.stringify(json_dump))
-
             return true; // return false to cancel form action
         });
     </script>

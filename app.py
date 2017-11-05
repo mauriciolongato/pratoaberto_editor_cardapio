@@ -4,6 +4,7 @@ import itertools
 import json
 import os
 import requests
+from operator import itemgetter
 from flask import Flask, flash, redirect, render_template, request, url_for, make_response
 from werkzeug.utils import secure_filename
 import cardapios_terceirizadas as terceirizadaslist
@@ -408,138 +409,84 @@ def escolas():
         return render_template("configurações_escolas.html", escolas=escolas)
 
 
-# @app.route('/atualiza_escolas_out', methods=['POST'])
-@app.route('/atualiza_escolas', methods=['POST'])
-def atualiza_escolas():
-    data = request.form.get('json_dump', request.data)
-    data = json.loads(data)
-
-    erro_falta_data = False
-    erro_data = False
-
-    for escola_mod in data:
-
-        escola_atual = get_escola(escola_mod['_id'])
-        escola_atual['_id'] = int(escola_mod['_id'])
-        if 'edital' not in escola_atual:
-            escola_atual['edital'] = ''
-
-        if 'data_inicio_vigencia' not in escola_atual:
-            escola_atual['data_inicio_vigencia'] = ''
-
-        if escola_atual['nome'] != escola_mod['nome']:
-            escola_atual['nome'] = escola_mod['nome']
-
-        if escola_atual['endereco'] != escola_mod['endereco']:
-            escola_atual['endereco'] = escola_mod['endereco']
-
-        if escola_atual['bairro'] != escola_mod['bairro']:
-            escola_atual['bairro'] = escola_mod['bairro']
-
-        try:
-            escola_mod['lat'] = float(escola_mod['lat'])
-            escola_mod['lon'] = float(escola_mod['lon'])
-        except:
-            pass
-
-        if escola_atual['lat'] != escola_mod['lat']:
-            escola_atual['lat'] = escola_mod['lat']
-
-        if escola_atual['lon'] != escola_mod['lon']:
-            escola_atual['lon'] = escola_mod['lon']
-
-        try:
-            escola_mod['agrupamento'] = int(escola_mod['agrupamento'])
-        except:
-            pass
-
-        flag_unidade = (escola_atual['tipo_unidade'] != escola_mod['tipo_unidade'])
-        flag_atendimento = (escola_atual['tipo_atendimento'] != escola_mod['tipo_atendimento'])
-        flag_agrupamento = (escola_atual['agrupamento'] != escola_mod['agrupamento'])
-        flag_edital = (escola_atual['edital'] != escola_mod['edital'])
-
-        if flag_unidade or flag_atendimento or flag_agrupamento or flag_edital:
-            flag_historico = True
-        else:
-            flag_historico = False
-
-        if flag_historico == True:
-            if escola_mod['data_inicio_vigencia'] == '':
-                erro_falta_data = True
-
-            else:
-                erro_falta_data = False
-                try:
-                    erro_data = False
-                    data = datetime.datetime.strptime(escola_mod['data_inicio_vigencia'], '%Y%m%d')
-                except:
-                    erro_data = True
-
-            if 'historico' in escola_atual:
-                escola_atual['historico'].append({'data_inicio_vigencia': escola_mod['data_inicio_vigencia'],
-                                                  'tipo_unidade': escola_atual['tipo_unidade'],
-                                                  'tipo_atendimento': escola_atual['tipo_atendimento'],
-                                                  'agupamento': escola_atual['agrupamento'],
-                                                  'edital': escola_atual['edital']
-                                                  })
-                escola_atual['tipo_unidade'] = escola_mod['tipo_unidade']
-                escola_atual['tipo_atendimento'] = escola_mod['tipo_atendimento']
-                escola_atual['agrupamento'] = escola_mod['agrupamento']
-                escola_atual['edital'] = escola_mod['edital']
-                escola_atual['data_inicio_vigencia'] = escola_mod['data_inicio_vigencia']
-
-            else:
-                escola_atual['historico'] = []
-                escola_atual['historico'].append({'data_inicio_vigencia': escola_mod['data_inicio_vigencia'],
-                                                  'tipo_unidade': escola_atual['tipo_unidade'],
-                                                  'tipo_atendimento': escola_atual['tipo_atendimento'],
-                                                  'agupamento': escola_atual['agrupamento'],
-                                                  'edital': escola_atual['edital']
-                                                  })
-                escola_atual['tipo_unidade'] = escola_mod['tipo_unidade']
-                escola_atual['tipo_atendimento'] = escola_mod['tipo_atendimento']
-                escola_atual['agrupamento'] = escola_mod['agrupamento']
-                escola_atual['edital'] = escola_mod['edital']
-                escola_atual['data_inicio_vigencia'] = escola_mod['data_inicio_vigencia']
-
-
-        if (erro_data == False) and (erro_falta_data == False):
-            headers = {'Content-type': 'application/json'}
-            r = requests.post(api + '/editor/escola/{}'.format(str(escola_atual['_id'])),
-                              data=json.dumps(escola_atual),
-                              headers=headers)
-        else:
-            pass
-
-    if request.form:
-        if erro_falta_data:
-            flash('Para essas modificações, é necessario definir a data de inicio da vigência das modificações! No campo "data" coloque a informação no formato aaaammdd')
-            return (redirect(url_for('escolas')))
-        elif erro_data:
-            flash('Formato da data inválido. No campo "data" coloque a informação no formato aaaammdd')
-            return (redirect(url_for('escolas')))
-        else:
-            return (redirect(url_for('escolas')))
-    else:
-        return ('', 200)
-
-
 @app.route('/atualiza_historico_escolas', methods=['POST'])
 def atualiza_historico_escolas():
     data = request.form.get('json_dump', request.data)
-    data = json.loads(data)
+    jdata = json.loads(data)
+    jdata = [dict(t) for t in set([tuple(d.items()) for d in jdata])]
+    flag_verificacoes = True
+    mensagens = []
 
     # Vefificações
-    # 1. Todas as linhas devem ter o mesmo código EOL
+    if len(set([x['_id'] for x in jdata])) > 1:
+        flag_verificacoes = False
+        mensagens.append('Código EOL é um número unico e obrigatório por escola.')
 
-    # 2. Se existir mais de 1 registro, todas as linhas devem conter os campos Data preenchidos:
+    if len(jdata) > 1:
+        for row in jdata:
+            try:
+                data = datetime.datetime.strptime(row['data_inicio_vigencia'], '%Y%m%d')
+            except:
+                flag_verificacoes = False
+                mensagens.append('Data informada invalida ou faltante.')
 
-    # 3. Se gestão for terceirizada, o campo Edital é obrigatório
+    for row in jdata:
+        if row['tipo_atendimento'] == 'TERCEIRIZADA':
+            if row['edital'] == '':
+                flag_verificacoes = False
+                mensagens.append('Para escolas com o tipo de atendimento TERCEIRIZADA, o campo edital é obrigatório.')
 
-    # 4. Se 
+    if flag_verificacoes == False:
+        mensagem = '\n'.join(list(set(mensagens)))
+        flash(mensagem)
+        return redirect(url_for('escolas'))
+
+    # Construção das informações da escola
+    else:
+        jdata = sorted(jdata, key=itemgetter('data_inicio_vigencia'), reverse=True)
+        escola_atual = get_escola(jdata[0]['_id'])
+        escola_atual['_id'] = int(jdata[0]['_id'])
+        escola_aux = jdata[0]
+
+        # Atualiza informacoes atuais da escola
+        if escola_aux['tipo_atendimento'] == 'TERCEIRIZADA':
+            escola_atual['agrupamento'] = escola_aux['edital']
+            _keys = ['nome', 'tipo_unidade', 'endereco', 'bairro', 'lat', 'lon', 'edital', 'data_inicio_vigencia']
+            for _key in _keys:
+                escola_atual[_key] = escola_aux[_key]
+        else:
+            _keys = ['nome', 'tipo_unidade', 'agrupamento', 'endereco', 'bairro', 'lat', 'lon', 'edital', 'data_inicio_vigencia']
+            for _key in _keys:
+                escola_atual[_key] = escola_aux[_key]
+
+        # Constroi histórico
+        if len(jdata) == 1:
+            escola_atual['historico'] = []
+            pass
+        else:
+            escola_atual['historico'] = []
+            for escola in jdata[1:]:
+                # Atualiza informacoes atuais da escola
+                if escola['tipo_atendimento'] == 'TERCEIRIZADA':
+                    escola['agrupamento_regiao'] = escola['agrupamento']
+                    escola['agrupamento'] = escola['edital']
+                    escola['idades'] = escola_atual['idades']
+
+                else:
+                    escola['agrupamento_regiao'] = escola['agrupamento']
+                    escola['edital'] = ''
+                    escola['idades'] = escola_atual['edital']
+
+                escola_atual['historico'].append(escola)
 
 
-    return
+        headers = {'Content-type': 'application/json'}
+        r = requests.post(api + '/editor/escola/{}'.format(str(escola_atual['_id'])),
+                          data=json.dumps(escola_atual),
+                          headers=headers)
+
+        flash('Informações salvas com sucesso')
+        return redirect(url_for('escolas'))
 
 
 @app.route("/download_publicacao", methods=["GET", "POST"])

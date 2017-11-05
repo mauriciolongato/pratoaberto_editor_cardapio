@@ -85,7 +85,7 @@
         <!-- Edição da escola -->
         <div class="modal fade" tabindex="-1" role="dialog" id="xml_form">
             <div class="modal-dialog" role="document" style="width: 70%">
-                <form method="post" action="/atualiza_historico_escolas" enctype="multipart/form-data">
+                <form method="post" id="post_json" action="/atualiza_historico_escolas" enctype="multipart/form-data">
                     <div class="modal-content">
                         <div class="modal-header">
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -122,7 +122,8 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default" data-dismiss="modal">FECHAR</button>
-                            <button type="submit" onclick="geraTabela()" class="btn btn-success">SALVAR</button>
+                            <button type="submit" class="btn btn-success">SALVAR</button>
+                            <input type="hidden" name="json_dump" id="json_dump" value="json_dump">
                         </div>
                     </div>
                 </form>
@@ -138,14 +139,6 @@
             <div class="panel panel-success">
                 <div class="panel-heading">
                     <h2 class="panel-title">Escolas</h2>
-                    <div class="pull-right">
-                        <span class="clickable filter" data-toggle="tooltip" title="Toggle table filter" data-container="body">
-                            <i class="glyphicon glyphicon-filter"></i>
-                        </span>
-                    </div>
-                </div>
-                <div class="panel-body">
-                    <input type="text" class="form-control" id="task-table-filter" data-action="filter" data-filters="#task-table" placeholder="Filter Tasks" />
                 </div>
                 <div class="table-responsive">
                     <div>
@@ -168,12 +161,12 @@
                             </thead>
                             <tbody>
                                 {% for linha in escolas: %}
-                                <tr class="item" id="{{ linha['_id'] }}">
+                                <tr class="item">
                                     <td><a class="btn btn-info" onclick='editRow(this)' href="#" data-toggle="modal" data-target="#xml_form">EDITAR</a></td>
                                     <td class="cod_eol">{{ linha['_id'] }}</td>
                                     <td class="tipo_atendimento">{{ linha['tipo_atendimento'] }}</td>
                                     <td class="tipo_unidade">{{ linha['tipo_unidade'] }}</td>
-                                    <td class="agrupamento">{{ linha['agrupamento'] }}</td>
+                                    <td class="agrupamento">{{ linha['agrupamento_regiao'] }}</td>
                                     <td class="edital">{{ linha['edital'] }}</td>
                                     <td class="data">{{ linha['data_inicio_vigencia'] }}</td>
                                     <td class="nome">{{ linha['nome'] }}</td>
@@ -183,19 +176,19 @@
                                     <td class="lon">{{ linha['lon'] }}</td>
                                 </tr>
                                     {% for linha_historico in linha['historico']: %}
-                                        <tr class="item" style="background-color: #FFEEAD;display: none;" id="{{ linha['_id'] }}">
+                                        <tr class="item" style="display: none;">
                                             <td><a value='Delete' onclick='deleteRowModal(this)'><i style='color:#D9534F;font-size:30px;text-align: center' class='fa'></i></a></td>
                                             <td class="cod_eol" contenteditable='true'>{{ linha['_id'] }}</td>
                                             <td class="tipo_atendimento" contenteditable='true'>{{ linha_historico['tipo_atendimento'] }}</td>
                                             <td class="tipo_unidade" contenteditable='true'>{{ linha_historico['tipo_unidade'] }}</td>
-                                            <td class="agrupamento" contenteditable='true'>{{ linha_historico['agrupamento'] }}</td>
+                                            <td class="agrupamento" contenteditable='true'>{{ linha_historico['agrupamento_regiao'] }}</td>
                                             <td class="edital" contenteditable='true'>{{ linha_historico['edital'] }}</td>
                                             <td class="data" contenteditable='true'>{{ linha_historico['data_inicio_vigencia'] }}</td>
-                                            <td class="nome" contenteditable='true'>{{ linha['nome'] }}</td>
-                                            <td class="endereco" contenteditable='true'>{{ linha['endereco'] }}</td>
-                                            <td class="bairro" contenteditable='true'>{{ linha['bairro'] }}</td>
-                                            <td class="lat" contenteditable='true'>{{ linha['lat'] }}</td>
-                                            <td class="lon" contenteditable='true'>{{ linha['lon'] }}</td>
+                                            <td class="nome" contenteditable='true'>{{ linha_historico['nome'] }}</td>
+                                            <td class="endereco" contenteditable='true'>{{ linha_historico['endereco'] }}</td>
+                                            <td class="bairro" contenteditable='true'>{{ linha_historico['bairro'] }}</td>
+                                            <td class="lat" contenteditable='true'>{{ linha_historico['lat'] }}</td>
+                                            <td class="lon" contenteditable='true'>{{ linha_historico['lon'] }}</td>
                                         </tr>
                                     {% endfor %}
                                 {% endfor %}
@@ -212,77 +205,16 @@
                 <tbody style="display:none">
             </table>
         </footer>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class=flashes>
+                    {% for category, message in messages %}
+                        <li id="mensagem" class="{{ category }} hidden">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
     </div>
-
-    <!-- Script com a funcionalidade do filtro da tabela -->
-    <script>
-        /**
-        *   I don't recommend using this plugin on large tables, I just wrote it to make the demo useable. It will work fine for smaller tables
-        *   but will likely encounter performance issues on larger tables.
-        *
-        *		<input type="text" class="form-control" id="dev-table-filter" data-action="filter" data-filters="#dev-table" placeholder="Filter Developers" />
-        *		$(input-element).filterTable()
-        *
-        *	The important attributes are 'data-action="filter"' and 'data-filters="#table-selector"'
-        */
-        (function(){
-            'use strict';
-            var $ = jQuery;
-            $.fn.extend({
-                filterTable: function(){
-                    return this.each(function(){
-                        $(this).on('keyup', function(e){
-                            $('.filterTable_no_results').remove();
-                            var $this = $(this),
-                                search = $this.val().toLowerCase(),
-                                target = $this.attr('data-filters'),
-                                $target = $(target),
-                                $rows = $target.find('tbody tr');
-
-                            if(search == '') {
-                                $rows.show();
-                            } else {
-                                $rows.each(function(){
-                                    var $this = $(this);
-                                    $this.text().toLowerCase().indexOf(search) === -1 ? $this.hide() : $this.show();
-                                })
-                                if($target.find('tbody tr:visible').size() === 0) {
-                                    var col_count = $target.find('tr').first().find('td').size();
-                                    var no_results = $('<tr class="filterTable_no_results"><td colspan="'+col_count+'">No results found</td></tr>')
-                                    $target.find('tbody').append(no_results);
-                                }
-                            }
-                        });
-                    });
-                }
-            });
-            $('[data-action="filter"]').filterTable();
-        })(jQuery);
-
-        $(function(){
-            // attach table filter plugin to inputs
-            $('[data-action="filter"]').filterTable();
-
-            $('.container').on('click', '.panel-heading span.filter', function(e){
-                var $this = $(this),
-                    $panel = $this.parents('.panel');
-
-                $panel.find('.panel-body').slideToggle();
-                if($this.css('display') != 'none') {
-                    $panel.find('.panel-body input').focus();
-                }
-            });
-            $('[data-toggle="tooltip"]').tooltip();
-        })
-    </script>
-
-    <!-- Deleta linha da tabela -->
-    <script>
-        function deleteRow(r) {
-            var i = r.parentNode.parentNode.rowIndex;
-            document.getElementById("task-table").deleteRow(i);
-        }
-    </script>
 
     <!-- Adiciona linhas na tabela -->
     <script>
@@ -306,80 +238,50 @@
 
     </script>
 
-    <!-- Monta tabela -->
-    <script>
-        function geraTabela() {
-            json_dump = [];
-            $('#task-table tr.item').each(function () {
-                var tipo_gestao = $(this).find(".tipo_gestao").html();
-                var tipo_escola = $(this).find(".tipo_escola").html();
-                var edital = $(this).find(".edital").html();
-                var dia_semana = $(this).find(".dia_semana").html();
-                var idade = $(this).find(".idade").html();
-                var refeicao = $(this).find(".refeicao").html();
-                var cardapio = $(this).find(".cardapio").html();
-                var Tabela = [tipo_gestao, tipo_escola, edital, dia_semana, idade, refeicao, cardapio]
-                json_dump.push(Tabela);
-            });
-            $('#json_dump').attr('value', JSON.stringify(json_dump))
-
-        }
-    </script>
-
     <!-- Cria json da tabela -->
     <script>
         $('#post_json').submit(function() {
             json_dump = [];
-            lista_codigo_eol_modificacoes = {}
-            $('#lista-modificacoes tr.item').each(function () {
-                var cod_eol_modificacao = $($(this).children('td')[0]).text();
-                lista_codigo_eol_modificacoes[cod_eol_modificacao] = 1
-            });
-
-            $('#task-table tr.item').each(function () {
-                for (var key in lista_codigo_eol_modificacoes) {
-                    if (key == $($(this).children('td')[2]).text()) {
-                        var cod_eol = $($(this).children('td')[2]).text();
-                        var tipo_atendimento = $($(this).children('td')[3]).text();
-                        var tipo_unidade = $($(this).children('td')[4]).text();
-                        var agrupamento = $($(this).children('td')[5]).text();
-                        var edital = $($(this).children('td')[6]).text();
-                        var data = $($(this).children('td')[7]).text();
-                        var nome = $($(this).children('td')[8]).text();
-                        var endereco = $($(this).children('td')[9]).text();
-                        var bairro = $($(this).children('td')[10]).text();
-                        var lat = $($(this).children('td')[11]).text();
-                        var lon = $($(this).children('td')[12]).text();
-                        modificacao = {
-                            '_id' : cod_eol,
-                            'nome': nome,
-                            'tipo_unidade' : tipo_unidade,
-                            'tipo_atendimento': tipo_atendimento,
-                            'agrupamento': agrupamento,
-                            'edital': edital,
-                            'endereco': endereco,
-                            'bairro': bairro,
-                            'lat': lat,
-                            'lon': lon,
-                            'data_inicio_vigencia': data}
-
-                        json_dump.push(modificacao)
-
-                    }
+            $('#edicao-escola tr.item').each(function () {
+                var cod_eol = $($(this).children('td')[1]).text();
+                var tipo_atendimento = $($(this).children('td')[2]).text();
+                var tipo_unidade = $($(this).children('td')[3]).text();
+                var agrupamento = $($(this).children('td')[4]).text();
+                var edital = $($(this).children('td')[5]).text();
+                var data = $($(this).children('td')[6]).text();
+                var nome = $($(this).children('td')[7]).text();
+                var endereco = $($(this).children('td')[8]).text();
+                var bairro = $($(this).children('td')[9]).text();
+                var lat = $($(this).children('td')[10]).text();
+                var lon = $($(this).children('td')[11]).text();
+                modificacao = {
+                    '_id': cod_eol,
+                    'tipo_atendimento': tipo_atendimento,
+                    'tipo_unidade': tipo_unidade,
+                    'agrupamento': agrupamento,
+                    'edital': edital,
+                    'data_inicio_vigencia': data,
+                    'nome': nome,
+                    'endereco': endereco,
+                    'bairro': bairro,
+                    'lat': lat,
+                    'lon': lon,
                 }
+
+                json_dump.push(modificacao)
             });
             $('#json_dump').attr('value', JSON.stringify(json_dump))
             return true; // return false to cancel form action
-        });
 
+        });
 
     </script>
 
     <!-- Edita escola -->
     <script>
         function editRow(r) {
-            $('#edicao-escola tr').not(':first').empty();
-            $('#task-table tr').not(':first').each(function() {
+            $('#edicao-escola tbody').empty();
+            $('#task-table tr.item').not(':first').each(function() {
                 var semana_linha = $($(this).children('td')[1]).text()
                 if (semana_linha == $($($(r).closest('tr')).children('td')[1]).text()) {
                     var cod_eol = $($(this).children('td')[1]).text();
@@ -447,6 +349,12 @@
 
     </script>
 
+    <!-- Pop erro -->
+    <script>
+        if ($('#mensagem').length) {
+            window.alert($('#mensagem').text())
+        }
+    </script>
 
 </body>
 </html>

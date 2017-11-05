@@ -128,10 +128,26 @@ def get_escolas():
 
 
 def post_cardapio():
+    escolas = get_escolas()
     api = 'https://pratoaberto.sme.prefeitura.sp.gov.br/api'
     headers = {'Content-type': 'application/json'}
-    jdata = '[{"_id":{"$oid":"59fa66a454e6253592047a8b"}, "idade": "Z - UNIDADES SEM FAIXA", "data": "20171101", "status":"PENDENTE"}]'
-    r = requests.post(api + '/editor/cardapios', data=jdata, headers=headers)
+    count = 0
+    for escola in escolas:
+        print(count)
+        count += 1
+        # 1. Criar o agrupamento_regiao
+        # escola['agrupamento_regiao'] = escola['agrupamento']
+        # 2. Se terceirizada, acrescentar o 'EDITAL 78/2016'
+        if escola['tipo_atendimento'] == 'TERCEIRIZADA':
+            escola['agrupamento'] = 'EDITAL 78/2016'
+            escola['edital'] = 'EDITAL 78/2016'
+
+        # 4. Criar o status com o valor 'ativo'
+        escola['status'] = 'ativo'
+
+        r = requests.post(api + '/editor/escola/{}'.format(str(escola['_id'])),
+                          data=json.dumps(escola),
+                          headers=headers)
 
 
 if __name__ == '__main__':
@@ -139,13 +155,11 @@ if __name__ == '__main__':
     # open_csv()
     import json
 
-    post_cardapio()
-    escolas = get_escolas()
-    # cod_eol = [91065, 19235, 90891]
+    cod_eol = [91065, 19235, 90891]
     # escolas_f = [x for x in escolas if x['_id'] in cod_eol]
-    escolas_eol = set([x['_id'] for x in escolas])
-    print(len(escolas_eol))
-    print(escolas_eol)
-    for cod_eol in ['19235']:
-        print(json.dumps(get_escola(str(cod_eol))['historico']))
-        print('\n')
+    # escolas_eol = set([x['_id'] for x in escolas])
+    # print(len(escolas_eol))
+    # print(escolas_eol)
+    # for cod_eol in ['19235']:
+    #     print(json.dumps(get_escola(str(cod_eol))['historico']))
+    #     print('\n')

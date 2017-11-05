@@ -297,7 +297,7 @@
     <script>
         function editRow(r) {
             $('#edicao-escola tbody').empty();
-            $('#task-table tr.item').not(':first').each(function() {
+            $('#task-table tr.item').each(function() {
                 var semana_linha = $($(this).children('td')[1]).text()
                 if (semana_linha == $($($(r).closest('tr')).children('td')[1]).text()) {
                     var cod_eol = $($(this).children('td')[1]).text();

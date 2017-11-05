@@ -127,6 +127,18 @@ def get_escolas():
     return escolas
 
 
+def get_escola(cod_eol):
+    api = 'https://pratoaberto.sme.prefeitura.sp.gov.br/api'
+    url = api + '/escola/{}'.format(cod_eol)
+    r = requests.get(url)
+    try:
+        escola = r.json()
+    except:
+        escola = None
+
+    return escola
+
+
 def post_cardapio():
     escolas = get_escolas()
     api = 'https://pratoaberto.sme.prefeitura.sp.gov.br/api'
@@ -150,12 +162,45 @@ def post_cardapio():
                           headers=headers)
 
 
+def post_cardapio_add_merendas():
+    FILE = './tmp/Escolas x Tipo Refeição_Texto'
+
+    with open(FILE, 'r', encoding="ISO-8859-1") as f:
+        refeicao_escola = {}
+        for row in f.readlines():
+            data = row.replace("'", '').replace('\n', '').split(', ')
+            if data[0] in refeicao_escola.keys():
+                refeicao_escola[data[0]].append(data[1])
+            else:
+                refeicao_escola[data[0]] = []
+                refeicao_escola[data[0]].append(data[1])
+
+    api = 'https://pratoaberto.sme.prefeitura.sp.gov.br/api'
+    headers = {'Content-type': 'application/json'}
+    count = 0
+    for _id in refeicao_escola.keys():
+        print(str(count) + ' - ' + api + '/editor/escola/{}'.format(str(_id)))
+        escola = get_escola(_id)
+        if escola == None:
+            print(_id)
+            pass
+        else:
+            escola['_id'] = int(_id)
+            escola['refeicoes'] = refeicao_escola[_id]
+            # print(str(count) + ' - ' + api + '/editor/escola/{}'.format(str(escola['_id'])))
+            r = requests.post(api + '/editor/escola/{}'.format(str(escola['_id'])),
+                          data=json.dumps(escola),
+                          headers=headers)
+        count += 1
+
+
 if __name__ == '__main__':
     # db_functions.truncate_receitas_terceirizadas()
     # open_csv()
     import json
 
-    cod_eol = [91065, 19235, 90891]
+    # post_cardapio_add_merendas()
+    # cod_eol = [91065, 19235, 90891]
     # escolas_f = [x for x in escolas if x['_id'] in cod_eol]
     # escolas_eol = set([x['_id'] for x in escolas])
     # print(len(escolas_eol))

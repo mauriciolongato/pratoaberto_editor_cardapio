@@ -462,6 +462,18 @@ def atualiza_historico_escolas():
             for _key in _keys:
                 escola_atual[_key] = escola_aux[_key]
 
+        try:
+            lista_receitas = [x.strip() for x in escola_aux['refeicoes'].split(',') if x.strip() != '']
+        except:
+            lista_receitas = []
+        escola_atual['refeicoes'] = lista_receitas
+
+        try:
+            lista_idades = [x.strip() for x in escola_aux['idades'].split(',') if x.strip() != '']
+        except:
+            lista_idades = []
+        escola_atual['idades'] = lista_idades
+
         # Constroi histórico
         if len(jdata) == 1:
             escola_atual['historico'] = []
@@ -473,22 +485,34 @@ def atualiza_historico_escolas():
                 if escola['tipo_atendimento'] == 'TERCEIRIZADA':
                     escola['agrupamento_regiao'] = escola['agrupamento']
                     escola['agrupamento'] = escola['edital']
-                    escola['idades'] = escola_atual['idades']
+                    # escola['idades'] = escola_atual['idades']
                     try:
-                        lista_receitas = [x for x in escola['refeicoes'].split(',') if x != '']
+                        lista_receitas = [x.strip() for x in escola['refeicoes'].split(',') if x.strip() != '']
                     except:
                         lista_receitas = []
                     escola['refeicoes'] = lista_receitas
 
+                    try:
+                        lista_idades = [x.strip() for x in escola['idades'].split(',') if x.strip() != '']
+                    except:
+                        lista_idades = []
+                    escola['idades'] = lista_idades
+
                 else:
                     escola['agrupamento_regiao'] = escola['agrupamento']
                     escola['edital'] = ''
-                    escola['idades'] = escola_atual['edital']
+                    # escola['idades'] = escola_atual['edital']
                     try:
-                        lista_receitas = [x for x in escola['refeicoes'].split(',') if x != '']
+                        lista_receitas = [x.strip() for x in escola['refeicoes'].split(',') if x.strip() != '']
                     except:
                         lista_receitas = []
                     escola['refeicoes'] = lista_receitas
+                    try:
+                        lista_idades = [x.strip() for x in escola['idades'].split(',') if x.strip() != '']
+                    except:
+                        lista_idades = []
+                    escola['idades'] = lista_idades
+
 
                 escola_atual['historico'].append(escola)
 

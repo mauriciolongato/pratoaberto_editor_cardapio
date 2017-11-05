@@ -162,6 +162,97 @@ def post_cardapio():
                           headers=headers)
 
 
+def post_idades_idades():
+    escolas = get_escolas()
+    api = 'https://pratoaberto.sme.prefeitura.sp.gov.br/api'
+    headers = {'Content-type': 'application/json'}
+    count = 0
+    dic_refeicoes = {
+        'A - ALMOCO': 'A - ALMOCO',
+        'AA - ALMOCO ADULTO': 'AA - ALMOCO ADULTO',
+        'C - COLACAO': 'C - COLACAO',
+        'D - DESJEJUM': 'D - DESJEJUM',
+        'FPJ - FILHOS PRO JOVEM': 'FPJ - FILHOS PRO JOVEM',
+        'J - JANTAR': 'J - JANTAR',
+        'L - LANCHE': 'L - LANCHE',
+        'L4 - LANCHE 4 OU LANCHE 8 HORAS': 'L4 - LANCHE 4 HORAS',
+        'L5 - LANCHE 5 OU 6 HORAS': 'L5 - LANCHE 5 HORAS',
+        'L5 - LANCHE 5 OU LANCHE 6 HORAS': 'L5 - LANCHE 5 HORAS',
+        'MI - MERENDA INICIAL': 'MI - MERENDA INICIAL',
+        'MS - MERENDA SECA': 'MS - MERENDA SECA',
+        'R1 - REFEICAO 1': 'R1 - REFEICAO 1'
+    }
+
+    for escola in escolas:
+        count += 1
+        if 'refeicoes' in escola.keys():
+
+            refeicao_aux = []
+            for refeicao in escola['refeicoes']:
+                if refeicao in dic_refeicoes.keys():
+                    refeicao_aux.append(dic_refeicoes[refeicao])
+                else:
+                    refeicao_aux.append(refeicao)
+            if refeicao_aux != escola['refeicoes']:
+                print(count, escola['_id'], refeicao_aux, escola['refeicoes'])
+            escola['refeicoes'] = refeicao_aux
+
+            refeicao_aux = []
+            if 'historico' in escola.keys():
+                if escola['historico'] != []:
+                    for refeicao in escola['historico']['refeicoes']:
+                        if refeicao in dic_refeicoes.keys():
+                            refeicao_aux.append(dic_refeicoes[refeicao])
+                        else:
+                            refeicao_aux.append(refeicao)
+                        escola['historico']['refeicoes'] = refeicao_aux
+
+
+            r = requests.post(api + '/editor/escola/{}'.format(str(escola['_id'])),
+                              data=json.dumps(escola),
+                              headers=headers)
+
+
+def post_ordenar_refeicoes():
+    escolas = get_escolas()
+    api = 'https://pratoaberto.sme.prefeitura.sp.gov.br/api'
+    headers = {'Content-type': 'application/json'}
+    count = 0
+
+    refeicoes_ordenadas = ['MI - MERENDA INICIAL',
+                           'D - DESJEJUM',
+                           'C - COLACAO',
+                           'AA - ALMOCO ADULTO',
+                           'A - ALMOCO',
+                           'L - LANCHE',
+                           'L4 - LANCHE 4 HORAS',
+                           'L5 - LANCHE 5 HORAS',
+                           'R1 - REFEICAO 1',
+                           'MS - MERENDA SECA',
+                           'FPJ - FILHOS PRO JOVEM',
+                           'J - JANTAR']
+
+    for escola in escolas:
+        count += 1
+        print(escola['_id'], count)
+        if 'refeicoes' in escola.keys():
+            lista_ordenada = [x for x in refeicoes_ordenadas if x in escola['refeicoes']]
+            print(escola['refeicoes'], lista_ordenada)
+            escola['refeicoes'] = lista_ordenada
+
+
+        if 'historico' in escola.keys():
+            if escola['historico'] != []:
+                if 'refeicoes' in escola['historico'].keys():
+                    lista_ordenada = [x for x in refeicoes_ordenadas if x in escola['refeicoes']]
+                    escola['historico']['refeicoes'] = lista_ordenada
+
+        r = requests.post(api + '/editor/escola/{}'.format(str(escola['_id'])),
+                          data=json.dumps(escola),
+                          headers=headers)
+
+
+
 def post_cardapio_add_merendas():
     FILE = './tmp/Escolas x Tipo Refeição_Texto'
 
@@ -264,7 +355,7 @@ if __name__ == '__main__':
     # open_csv()
     import json
 
-    mapa_pendencias()
+    post_ordenar_refeicoes()
     #quebras = get_quebras_escolas()
     #for row in quebras:
     #    print(row)

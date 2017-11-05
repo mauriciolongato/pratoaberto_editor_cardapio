@@ -113,7 +113,9 @@
                                             <th style="word-wrap: break-word;min-width: 150px;max-width: 150px;">BAIRRO</th>
                                             <th style="word-wrap: break-word;">LAT</th>
                                             <th style="word-wrap: break-word;">LON</th>
+                                            <th style="word-wrap: break-word;">STATUS</th>
                                             <th style="word-wrap: break-word;min-width: 400px;max-width: 400px;">REFEIÇÕES</th>
+                                            <th style="word-wrap: break-word;min-width: 400px;max-width: 400px;">IDADES</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -158,7 +160,9 @@
                                     <th style="word-wrap: break-word;min-width: 150px;max-width: 150px;">BAIRRO</th>
                                     <th style="word-wrap: break-word;">LAT</th>
                                     <th style="word-wrap: break-word;">LON</th>
+                                    <th style="word-wrap: break-word;">STATUS</th>
                                     <th style="word-wrap: break-word;min-width: 400px;max-width: 400px;">REFEIÇÕES</th>
+                                    <th style="word-wrap: break-word;min-width: 400px;max-width: 400px;">IDADES</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -176,8 +180,14 @@
                                     <td class="bairro">{{ linha['bairro'] }}</td>
                                     <td class="lat">{{ linha['lat'] }}</td>
                                     <td class="lon">{{ linha['lon'] }}</td>
+                                    <td class="status">{{ linha['status'] }}</td>
                                     <td class="refeicoes">
                                         {% for itens in linha['refeicoes']: %}
+                                            {{ itens }},
+                                        {%  endfor %}
+                                    </td>
+                                    <td class="idades">
+                                        {% for itens in linha['idades']: %}
                                             {{ itens }},
                                         {%  endfor %}
                                     </td>
@@ -196,8 +206,14 @@
                                             <td class="bairro" contenteditable='true'>{{ linha_historico['bairro'] }}</td>
                                             <td class="lat" contenteditable='true'>{{ linha_historico['lat'] }}</td>
                                             <td class="lon" contenteditable='true'>{{ linha_historico['lon'] }}</td>
+                                            <td class="status" contenteditable='true'>{{ linha_historico['status'] }}</td>
                                             <td class="refeicoes" contenteditable='true'>
-                                                {% for itens in linha['refeicoes']: %}
+                                                {% for itens in linha_historico['refeicoes']: %}
+                                                    {{ itens }},
+                                                {%  endfor %}
+                                            </td>
+                                            <td class="idades">
+                                                {% for itens in linha_historico['idades']: %}
                                                     {{ itens }},
                                                 {%  endfor %}
                                             </td>
@@ -245,7 +261,9 @@
                 "<td class='bairro' contenteditable='true'></td>" +
                 "<td class='lat' contenteditable='true'></td>" +
                 "<td class='lon' contenteditable='true'></td>" +
+                "<td class='status' contenteditable='true'></td>" +
                 "<td class='refeicoes' contenteditable='true'></td>" +
+                "<td class='idades' contenteditable='true'></td>" +
                 "</tr>"
             );
         };
@@ -268,7 +286,9 @@
                 var bairro = $($(this).children('td')[9]).text();
                 var lat = $($(this).children('td')[10]).text();
                 var lon = $($(this).children('td')[11]).text();
-                var refeicoes = $($(this).children('td')[12]).text();
+                var status = $($(this).children('td')[12]).text();
+                var refeicoes = $($(this).children('td')[13]).text();
+                var idades = $($(this).children('td')[14]).text();
                 modificacao = {
                     '_id': cod_eol,
                     'tipo_atendimento': tipo_atendimento,
@@ -281,7 +301,9 @@
                     'bairro': bairro,
                     'lat': lat,
                     'lon': lon,
-                    'refeicoes': refeicoes
+                    'status': status,
+                    'refeicoes': refeicoes,
+                    'idades': idades
                 }
 
                 json_dump.push(modificacao)
@@ -311,7 +333,9 @@
                     var bairro = $($(this).children('td')[9]).text();
                     var lat = $($(this).children('td')[10]).text();
                     var lon = $($(this).children('td')[11]).text();
-                    var refeicoes = $($(this).children('td')[12]).text();
+                    var status = $($(this).children('td')[12]).text();
+                    var refeicoes = $($(this).children('td')[13]).text();
+                    var idades = $($(this).children('td')[14]).text();
 
                     $('#edicao-escola').append(
                         "<tr class='item'>" +
@@ -327,7 +351,9 @@
                         "<td class='bairro' contenteditable='true'>"+bairro+"</td>" +
                         "<td class='lat' contenteditable='true'>"+lat+"</td>" +
                         "<td class='lon' contenteditable='true'>"+lon+"</td>" +
+                        "<td class='status' contenteditable='true'>"+status+"</td>" +
                         "<td class='refeicoes' contenteditable='true'>"+refeicoes+"</td>" +
+                        "<td class='idades' contenteditable='true'>"+idades+"</td>" +
                         "</tr>"
                     );
                 }
@@ -361,7 +387,9 @@
                 "<td class='bairro' contenteditable='true'>Bairro</td>" +
                 "<td class='lat' contenteditable='true'></td>" +
                 "<td class='lon' contenteditable='true'></td>" +
+                "<td class='status' contenteditable='true'></td>" +
                 "<td class='refeicoes' contenteditable='true'></td>" +
+                "<td class='idades' contenteditable='true'></td>" +
                 "</tr>"
             );
         };

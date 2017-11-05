@@ -194,10 +194,80 @@ def post_cardapio_add_merendas():
         count += 1
 
 
+def get_quebras_escolas():
+    escolas = get_escolas()
+    mapa_base = collections.defaultdict(list)
+    for escola in escolas:
+        agrupamento = str(escola['agrupamento'])
+        tipo_unidade = escola['tipo_unidade']
+        tipo_atendimento = escola['tipo_atendimento']
+        if 'idades' in escola.keys():
+            for idade in escola['idades']:
+                _key = ', '.join([agrupamento, tipo_unidade, tipo_atendimento, idade])
+                mapa_base[_key].append(escola['_id'])
+        else:
+            pass
+            # print(escola)
+
+    mapa = []
+    for row in mapa_base:
+        mapa.append(row.split(', ') + [len(mapa_base[row])] + [mapa_base[row][0]])
+
+    return mapa
+
+
+def get_cardapio(args):
+    url = api + '/editor/cardapios?' + '&'.join(['%s=%s' % item for item in args.items()])
+    r = requests.get(url)
+    refeicoes = r.json()
+
+    return refeicoes
+
+
+def mapa_pendencias():
+    mapa = get_quebras_escolas()
+
+    delta_dias = datetime.timedelta(days=7)
+    dia_semana_seguinte = datetime.datetime.now() + delta_dias
+    semana = [dia_semana_seguinte + datetime.timedelta(days=i) for i in range(0 - dia_semana_seguinte.weekday(), 7 - dia_semana_seguinte.weekday())]
+    dia_inicial = min(semana).strftime("%Y%m%d")
+    dia_final = max(semana).strftime("%Y%m%d")
+
+    dia_inicial = 20170918
+    dia_final = 20170922
+
+    # Por padrão, sempre colocaremos o cardápio da semana seguinte
+    mapa_final = []
+    for row in mapa:
+        args = {'agrupamento': row[0],
+                'tipo_unidade': row[1],
+                'tipo_atendimento': row[2],
+                'idade': row[3],
+                'status': 'SALVO',
+                'status': 'PUBLICADO',
+                'data_inicial': dia_inicial,
+                'data_final': dia_final}
+
+        cardapio = get_cardapio(args)
+        if cardapio == []:
+            args['status_publicacao'] = 0
+            mapa_final.append(args)
+            print(str(0), row)
+        else:
+            args['status_publicacao'] = 1
+            mapa_final.append(args)
+            print(str(1), row)
+
+
 if __name__ == '__main__':
     # db_functions.truncate_receitas_terceirizadas()
     # open_csv()
     import json
+
+    mapa_pendencias()
+    #quebras = get_quebras_escolas()
+    #for row in quebras:
+    #    print(row)
 
     # post_cardapio_add_merendas()
     # cod_eol = [91065, 19235, 90891]

@@ -113,6 +113,7 @@
                                             <th style="word-wrap: break-word;min-width: 150px;max-width: 150px;">BAIRRO</th>
                                             <th style="word-wrap: break-word;">LAT</th>
                                             <th style="word-wrap: break-word;">LON</th>
+                                            <th style="word-wrap: break-word;min-width: 400px;max-width: 400px;">REFEIÇÕES</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -157,6 +158,7 @@
                                     <th style="word-wrap: break-word;min-width: 150px;max-width: 150px;">BAIRRO</th>
                                     <th style="word-wrap: break-word;">LAT</th>
                                     <th style="word-wrap: break-word;">LON</th>
+                                    <th style="word-wrap: break-word;min-width: 400px;max-width: 400px;">REFEIÇÕES</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -174,6 +176,11 @@
                                     <td class="bairro">{{ linha['bairro'] }}</td>
                                     <td class="lat">{{ linha['lat'] }}</td>
                                     <td class="lon">{{ linha['lon'] }}</td>
+                                    <td class="refeicoes">
+                                        {% for itens in linha['refeicoes']: %}
+                                            {{ itens }},
+                                        {%  endfor %}
+                                    </td>
                                 </tr>
                                     {% for linha_historico in linha['historico']: %}
                                         <tr class="item" style="display: none;">
@@ -189,6 +196,11 @@
                                             <td class="bairro" contenteditable='true'>{{ linha_historico['bairro'] }}</td>
                                             <td class="lat" contenteditable='true'>{{ linha_historico['lat'] }}</td>
                                             <td class="lon" contenteditable='true'>{{ linha_historico['lon'] }}</td>
+                                            <td class="refeicoes" contenteditable='true'>
+                                                {% for itens in linha['refeicoes']: %}
+                                                    {{ itens }},
+                                                {%  endfor %}
+                                            </td>
                                         </tr>
                                     {% endfor %}
                                 {% endfor %}
@@ -227,11 +239,13 @@
                 "<td class='tipo_unidade' contenteditable='true'>TERCEIRIZADA</td>" +
                 "<td class='agrupamento' contenteditable='true'>A DEFINIR</td>" +
                 "<td class='edital' contenteditable='true'>EDITAL1</td>" +
+                "<td class='data' contenteditable='true'>Data</td>" +
                 "<td class='nome' contenteditable='true'></td>" +
                 "<td class='endereco' contenteditable='true'></td>" +
                 "<td class='bairro' contenteditable='true'></td>" +
                 "<td class='lat' contenteditable='true'></td>" +
                 "<td class='lon' contenteditable='true'></td>" +
+                "<td class='refeicoes' contenteditable='true'></td>" +
                 "</tr>"
             );
         };
@@ -254,6 +268,7 @@
                 var bairro = $($(this).children('td')[9]).text();
                 var lat = $($(this).children('td')[10]).text();
                 var lon = $($(this).children('td')[11]).text();
+                var refeicoes = $($(this).children('td')[12]).text();
                 modificacao = {
                     '_id': cod_eol,
                     'tipo_atendimento': tipo_atendimento,
@@ -266,6 +281,7 @@
                     'bairro': bairro,
                     'lat': lat,
                     'lon': lon,
+                    'refeicoes': refeicoes
                 }
 
                 json_dump.push(modificacao)
@@ -295,6 +311,7 @@
                     var bairro = $($(this).children('td')[9]).text();
                     var lat = $($(this).children('td')[10]).text();
                     var lon = $($(this).children('td')[11]).text();
+                    var refeicoes = $($(this).children('td')[12]).text();
 
                     $('#edicao-escola').append(
                         "<tr class='item'>" +
@@ -310,6 +327,7 @@
                         "<td class='bairro' contenteditable='true'>"+bairro+"</td>" +
                         "<td class='lat' contenteditable='true'>"+lat+"</td>" +
                         "<td class='lon' contenteditable='true'>"+lon+"</td>" +
+                        "<td class='refeicoes' contenteditable='true'>"+refeicoes+"</td>" +
                         "</tr>"
                     );
                 }
@@ -343,6 +361,7 @@
                 "<td class='bairro' contenteditable='true'>Bairro</td>" +
                 "<td class='lat' contenteditable='true'></td>" +
                 "<td class='lon' contenteditable='true'></td>" +
+                "<td class='refeicoes' contenteditable='true'></td>" +
                 "</tr>"
             );
         };

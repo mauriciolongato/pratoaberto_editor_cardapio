@@ -21,6 +21,7 @@ app = Flask(__name__)
 api = 'https://pratoaberto.sme.prefeitura.sp.gov.br/api'
 
 
+# BLOCO DE QUEBRA CARDÁPIOS
 @app.route("/", methods=["GET", "POST"])
 def backlog():
     if request.method == "GET":
@@ -60,6 +61,7 @@ def publicados():
                                semanas=semanas)
 
 
+# BLOCO DE UPLOAD DE XML E CRIAÇÃO DAS TERCEIRIZADAS
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
@@ -141,6 +143,7 @@ def cria_terceirizada():
                                refeicoes=refeicao)
 
 
+# BLOCO DE EDIÇÃO DOS CARDÁPIOS
 @app.route('/atualiza_cardapio', methods=['POST'])
 def atualiza_cardapio():
     headers = {'Content-type': 'application/json'}
@@ -153,7 +156,7 @@ def atualiza_cardapio():
         return ('', 200)
 
 
-comments = []
+# comments = []
 @app.route("/calendario", methods=["GET"])
 def calendario():
     args = request.args
@@ -359,6 +362,7 @@ def calendario_grupo_cardapio():
                                depara=depara)
 
 
+# BLOCO DE CONFIGURAÇÕES
 @app.route("/configuracoes_gerais", methods=['GET', 'POST'])
 def config():
     if request.method == "GET":
@@ -401,7 +405,6 @@ def atualiza_config_cardapio():
         return ('', 200)
 
 
-# @app.route('/escolas_out', methods=['GET'])
 @app.route('/escolas', methods=['GET'])
 def escolas():
     if request.method == "GET":
@@ -471,11 +474,21 @@ def atualiza_historico_escolas():
                     escola['agrupamento_regiao'] = escola['agrupamento']
                     escola['agrupamento'] = escola['edital']
                     escola['idades'] = escola_atual['idades']
+                    try:
+                        lista_receitas = [x for x in escola['refeicoes'].split(',') if x != '']
+                    except:
+                        lista_receitas = []
+                    escola['refeicoes'] = lista_receitas
 
                 else:
                     escola['agrupamento_regiao'] = escola['agrupamento']
                     escola['edital'] = ''
                     escola['idades'] = escola_atual['edital']
+                    try:
+                        lista_receitas = [x for x in escola['refeicoes'].split(',') if x != '']
+                    except:
+                        lista_receitas = []
+                    escola['refeicoes'] = lista_receitas
 
                 escola_atual['historico'].append(escola)
 
@@ -489,6 +502,7 @@ def atualiza_historico_escolas():
         return redirect(url_for('escolas'))
 
 
+# BLOCO DE DOWNLOAD DAS PUBLICAÇÕES
 @app.route("/download_publicacao", methods=["GET", "POST"])
 def publicacao():
     if request.method == "GET":
@@ -564,6 +578,72 @@ def download_csv():
             return output
         else:
             return ('', 200)
+
+
+# BLOCO MAPA DE PENDENCIAS
+@app.route('/mapa_pendencias', methods=['GET', 'POST'])
+def mapa_pendencias():
+    if request.method == "GET":
+        mapa = get_quebras_escolas()
+
+        delta_dias = datetime.timedelta(days=7)
+        dia_semana_seguinte = datetime.datetime.now() + delta_dias
+        semana = [dia_semana_seguinte + datetime.timedelta(days=i) for i in range(0 - dia_semana_seguinte.weekday(), 7 - dia_semana_seguinte.weekday())]
+        data_inicial = min(semana).strftime("%Y%m%d")
+        data_final = max(semana).strftime("%Y%m%d")
+
+        # Por padrão, sempre colocaremos o cardápio da semana seguinte
+        mapa_final = []
+        for row in mapa:
+            args = {'agrupamento': row[0],
+                    'tipo_unidade': row[1],
+                    'tipo_atendimento': row[2],
+                    'idade': row[3],
+                    'status': 'SALVO',
+                    'data_inicial': data_inicial,
+                    'data_final': data_final}
+
+            cardapio = get_cardapio(args)
+            if cardapio == []:
+                args['status_publicacao'] = 'Pendente'
+                mapa_final.append(args)
+            else:
+                args['status_publicacao'] = 'Feito'
+                mapa_final.append(args)
+
+        return render_template("mapa_pendencias.html", publicados=mapa_final,
+                        data_inicio_fim=str(data_inicial + '-' + data_final))
+
+    if request.method == "POST":
+        mapa = get_quebras_escolas()
+        request.form.get('datas', request.data)
+        data_inicial = request.form.get('data-inicial', request.data)
+        data_final = request.form.get('data-final', request.data)
+        data_inicial = datetime.datetime.strptime(data_inicial, '%d/%m/%Y').strftime('%Y%m%d')
+        data_final = datetime.datetime.strptime(data_final, '%d/%m/%Y').strftime('%Y%m%d')
+        filtro = request.form.get('filtro', request.data)
+
+        # Por padrão, sempre colocaremos o cardápio da semana seguinte
+        mapa_final = []
+        for row in mapa:
+            args = {'agrupamento': row[0],
+                    'tipo_unidade': row[1],
+                    'tipo_atendimento': row[2],
+                    'idade': row[3],
+                    'status': filtro,
+                    'data_inicial': data_inicial,
+                    'data_final': data_final}
+
+            cardapio = get_cardapio(args)
+            if cardapio == []:
+                args['status_publicacao'] = 'Pendente'
+                mapa_final.append(args)
+            else:
+                args['status_publicacao'] = 'Feito'
+                mapa_final.append(args)
+
+        return render_template("mapa_pendencias.html", publicados=mapa_final,
+                               data_inicio_fim=str(data_inicial + '-' + data_final))
 
 
 # FUNÇÕES AUXILIARES
@@ -885,6 +965,28 @@ def filtro_dicionarios(dictlist, key, valuelist):
 
 def get_cardapios_terceirizadas(tipo_gestao, tipo_escola, edital, idade):
     return db_functions.select_receitas_terceirizadas(tipo_gestao, tipo_escola, edital, idade)
+
+
+def get_quebras_escolas():
+    escolas = get_escolas()
+    mapa_base = collections.defaultdict(list)
+    for escola in escolas:
+        agrupamento = str(escola['agrupamento'])
+        tipo_unidade = escola['tipo_unidade']
+        tipo_atendimento = escola['tipo_atendimento']
+        if 'idades' in escola.keys():
+            for idade in escola['idades']:
+                _key = ', '.join([agrupamento, tipo_unidade, tipo_atendimento, idade])
+                mapa_base[_key].append(escola['_id'])
+        else:
+            pass
+            # print(escola)
+
+    mapa = []
+    for row in mapa_base:
+        mapa.append(row.split(', ') + [len(mapa_base[row])] + [mapa_base[row][0]])
+
+    return mapa
 
 
 if __name__ == "__main__":

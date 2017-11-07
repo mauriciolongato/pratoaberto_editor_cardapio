@@ -451,6 +451,12 @@ def atualiza_historico_escolas():
         escola_atual['_id'] = int(jdata[0]['_id'])
         escola_aux = jdata[0]
 
+        try:
+            escola_aux['lat'] = float(escola_aux['lat'])
+            escola_aux['lon'] = float(escola_aux['lon'])
+        except:
+            pass
+
         # Atualiza informacoes atuais da escola
         if escola_aux['tipo_atendimento'] == 'TERCEIRIZADA':
             escola_atual['agrupamento'] = escola_aux['edital']
@@ -491,12 +497,16 @@ def atualiza_historico_escolas():
                     except:
                         lista_receitas = []
                     escola['refeicoes'] = lista_receitas
-
                     try:
                         lista_idades = [x.strip() for x in escola['idades'].split(',') if x.strip() != '']
                     except:
                         lista_idades = []
                     escola['idades'] = lista_idades
+                    try:
+                        escola['lat'] = float(escola['lat'])
+                        escola['lon'] = float(escola['lon'])
+                    except:
+                        pass
 
                 else:
                     escola['agrupamento_regiao'] = escola['agrupamento']
@@ -512,6 +522,11 @@ def atualiza_historico_escolas():
                     except:
                         lista_idades = []
                     escola['idades'] = lista_idades
+                    try:
+                        escola['lat'] = float(escola['lat'])
+                        escola['lon'] = float(escola['lon'])
+                    except:
+                        pass
 
 
                 escola_atual['historico'].append(escola)

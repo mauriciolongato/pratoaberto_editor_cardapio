@@ -252,7 +252,6 @@ def post_ordenar_refeicoes():
                           headers=headers)
 
 
-
 def post_cardapio_add_merendas():
     FILE = './tmp/Escolas x Tipo Refeição_Texto'
 

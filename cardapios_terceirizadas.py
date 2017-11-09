@@ -1,6 +1,7 @@
 import datetime
 import itertools
 
+
 def create(FILE):
     pendentes = []
     with open(FILE, 'r') as f:

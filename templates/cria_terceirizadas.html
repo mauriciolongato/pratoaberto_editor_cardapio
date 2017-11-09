@@ -99,7 +99,7 @@
                     <div class="navbar-header">
                         <a class="navbar-brand" href="#">Prato Aberto - Cardápios Terceirizadas</a>
                     </div>
-                    <form method="post" id="post_json" action="/atualiza_cardapio">
+                    <form method="post" id="post_json" action="/upload_terceirizada">
                         <div class="collapse navbar-collapse">
                             <ul class="nav navbar-nav navbar-right">
                                 <button type="submit" class="btn btn-success">
@@ -431,53 +431,19 @@
         $('#post_json').submit(function() {
             var json_dump = [];
             var cardapio = {};
-            var quebra = {};
-            var quebra_anterior = {};
-            var lista_refeicao = {};
 
-            $('#task-table tr.item').each(function (idx, elm) {
-                quebra = {
+            $('#task-table tr.item').each(function() {
+                cardapio = {
+                    'status': 'PENDENTE',
+                    'tipo_atendimento': 'TERCEIRIZADA',
                     'tipo_unidade': $($(this).children('td')[1]).text(),
                     'agrupamento': $($(this).children('td')[2]).text(),
                     'data': $($(this).children('td')[4]).text(),
-                    'idade': $($(this).children('td')[3]).text()
-                };
-                //testa quebra contra quebra_anterior
-                if (JSON.stringify(quebra_anterior) === JSON.stringify(quebra) || idx == 0) {
-                    // se igual ou se é a primeira linha, adiciona a refeicao a lista de refeicoes
-                    lista_refeicao[$($(this).children('td')[5]).text()] = [];
-                }
-                else {
-                    // se diferente, a ultima quebra finalizou e deve ser salva
-                    cardapio = {
-                        'status': 'PENDENTE',
-                        'tipo_atendimento': 'TERCEIRIZADA',
-                        'tipo_unidade': quebra['tipo_unidade'],
-                        'agrupamento': quebra['agrupamento'],
-                        'data': quebra['data'],
-                        'idade': quebra['idade'],
-                        'cardapio_original': lista_refeicao,
-                        'cardapio': lista_refeicao
+                    'idade': $($(this).children('td')[3]).text(),
+                    'tipo_refeicao': $($(this).children('td')[5]).text()
                     };
-                    json_dump.push((cardapio));
-                    //reinicia lista_refeicao
-                    lista_refeicao = {};
-                }
-                quebra_anterior = quebra;
-            });
-            //adiciona a ultima quebra, já que ela nunca passara pelo teste de diferença vs quebra_anterior
-            cardapio = {
-                'status': 'PENDENTE',
-                'tipo_atendimento': 'TERCEIRIZADA',
-                'tipo_unidade': quebra['tipo_unidade'],
-                'agrupamento': quebra['agrupamento'],
-                'data': quebra['data'],
-                'idade': quebra['idade'],
-                'cardapio_original': lista_refeicao,
-                'cardapio': lista_refeicao
-            };
-            json_dump.push(cardapio);
-            $('#json_dump').attr('value', JSON.stringify(json_dump))
+                json_dump.push(cardapio);});
+            $('#json_dump').attr('value', JSON.stringify(json_dump));
             return true; // return false to cancel form action
         });
     </script>

@@ -26,7 +26,6 @@ api = 'https://pratoaberto.sme.prefeitura.sp.gov.br/api'
 def backlog():
     if request.method == "GET":
         pendentes = get_pendencias()
-        #semanas = sorted(set([x[8] for x in pendentes]), reverse=True)
         semanas = sorted(set([str(x[4]) + ' - ' + str(x[5]) for x in pendentes]), reverse=True)
         return render_template("pendencias_publicacao.html",
                                pendentes=pendentes,
@@ -34,7 +33,6 @@ def backlog():
 
     else:
         pendentes = get_pendencias()
-        #semanas = sorted(set([x[8] for x in pendentes]), reverse=True)
         semanas = sorted(set([str(x[4]) + ' - ' + str(x[5]) for x in pendentes]), reverse=True)
         return render_template("pendencias_publicacao.html",
                                pendentes=pendentes,
@@ -99,8 +97,8 @@ def upload_file():
                                             data,
                                             '&'.join(['%s=%s' % item for item in query.items()]),
                                             '&'.join(
-                                                ['status=%s' % item for item in ['PUBLICADO', 'SALVO', 'PENDENTE']]))
-                                    responses[_key] = requests.get('{}/editor/cardapios/{}?{}&{}'.format(*args)).json()
+                                                ['status=%s' % item for item in ['PUBLICADO', 'SALVO', 'PENDENTE', 'DELETADO']]))
+                                    responses[_key] = requests.get('{}/editor/cardapios?data_inicial={}&{}&{}'.format(*args)).json()
 
                                 cardapio = query
                                 cardapio['data'] = data
@@ -141,6 +139,73 @@ def cria_terceirizada():
                                tipo_unidade=tipo_unidade,
                                idades=idade,
                                refeicoes=refeicao)
+
+
+@app.route('/upload_terceirizada', methods=['POST'])
+def upload_terceirizadas():
+    headers = {'Content-type': 'application/json'}
+    data = request.form.get('json_dump', request.data)
+    jdata = json.loads(data)
+    cardapios = []
+    for refeicao in jdata:
+        quebra = {
+            'agrupamento': str(refeicao['agrupamento']),
+            'tipo_unidade': refeicao['tipo_unidade'],
+            'tipo_atendimento': refeicao['tipo_atendimento'],
+            'status': refeicao['status'],
+            'idade': refeicao['idade'],
+            'data': refeicao['data']}
+
+        if not cardapios:
+            quebra_aux = quebra
+            quebra_aux['cardapio'] = {refeicao['tipo_refeicao']: []}
+            quebra_aux['cardapio_original'] = {refeicao['tipo_refeicao']: []}
+            cardapios.append(quebra_aux)
+
+        else:
+            # Filtrar os cardapios nas chaves
+            cardapios_aux = [d for d in cardapios if d['agrupamento'] == str(refeicao['agrupamento'])]
+            cardapios_aux = [d for d in cardapios_aux if d['tipo_unidade'] == refeicao['tipo_unidade']]
+            cardapios_aux = [d for d in cardapios_aux if d['tipo_atendimento'] == refeicao['tipo_atendimento']]
+            cardapios_aux = [d for d in cardapios_aux if d['status'] == refeicao['status']]
+            cardapios_aux = [d for d in cardapios_aux if d['idade'] == refeicao['idade']]
+            cardapios_aux = [d for d in cardapios_aux if d['data'] == refeicao['data']]
+
+            if not cardapios_aux:
+                # Caso: quebra nao existe
+                quebra_aux = quebra
+                quebra_aux['cardapio'] = {refeicao['tipo_refeicao']: []}
+                quebra_aux['cardapio_original'] = {refeicao['tipo_refeicao']: []}
+                cardapios.append(quebra_aux)
+
+            else:
+                # Caso: quebra ja exista
+                count = 0
+                _keys = ['agrupamento', 'tipo_unidade', 'tipo_atendimento', 'status', 'idade', 'data']
+                for cardapio in cardapios:
+                    _flag = True
+                    for _key in _keys:
+                        if cardapio[_key] != quebra[_key]:
+                            _flag = False
+
+                    if _flag == True:
+                        # Encontramos o cardapio
+                        posicao = count
+                    count += 1
+
+                # Tendo a posicao dq quebra igual
+                cardapio_aux = cardapios[posicao]
+                quebra_aux = cardapio_aux
+                quebra_aux['cardapio'][refeicao['tipo_refeicao']] = []
+                quebra_aux['cardapio_original'][refeicao['tipo_refeicao']] = []
+                cardapios[posicao] = quebra_aux
+
+    r = requests.post(api + '/editor/cardapios', data=json.dumps(cardapios), headers=headers)
+
+    if request.form:
+        return (redirect(url_for('backlog')))
+    else:
+        return ('', 200)
 
 
 # BLOCO DE EDIÇÃO DOS CARDÁPIOS
@@ -211,9 +276,9 @@ def calendario():
                 cardapio_atual['cardapio_semana_anterior'] = []
                 cardapios.append(cardapio_atual)
 
-            elif cardapio_anterior:
-                cardapio_atual['cardapio_semana_anterior'] = []
-                cardapios.append(cardapio_atual)
+            #elif cardapio_anterior:
+            #    cardapio_atual['cardapio_semana_anterior'] = []
+            #    cardapios.append(cardapio_atual)
 
     if args['tipo_atendimento'] == 'TERCEIRIZADA':
         historicos_cardapios = get_cardapios_terceirizadas(args['tipo_atendimento'],

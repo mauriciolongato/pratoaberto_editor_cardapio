@@ -21,6 +21,8 @@ app = Flask(__name__)
 config = configparser.ConfigParser()
 config.read('config/integracao.conf')
 api = config.get('ENDPOINTS', 'PRATOABERTO_API')
+_user = config.get('LOGIN', 'USER')
+_password = config.get('LOGIN', 'PASSWORD')
 
 
 # BLOCO LOGIN
@@ -28,7 +30,8 @@ login_manager = flask_login.LoginManager()
 login_manager.init_app(app)
 
 # Our mock database.
-users = {'admin': {'password': 'secret'}}
+# users = {'admin': {'password': 'secret'}}
+users = {_user: {'password': _password}}
 
 
 class User(flask_login.UserMixin):

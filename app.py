@@ -7,22 +7,92 @@ import requests
 from operator import itemgetter
 from flask import Flask, flash, redirect, render_template, request, url_for, make_response
 from werkzeug.utils import secure_filename
+import flask_login
 import cardapios_terceirizadas as terceirizadaslist
 import cardapio_xml_para_dict as xmldict
 import db_setup
 import db_functions
+import configparser
+
 
 app = Flask(__name__)
 
-#ip_teste_vitor = 'http://192.168.0.195:8000'
-#ip_homolog = 'https://pratoaberto.tk/api'
-# api = 'https://pratoaberto.tk/api'
-# api = 'http://pratoaberto.sme.prefeitura.sp.gov.br:8100'
-api = 'https://pratoaberto.sme.prefeitura.sp.gov.br/api'
+# BLOCO GET ENDPOINT E KEYS
+config = configparser.ConfigParser()
+config.read('config/integracao.conf')
+api = config.get('ENDPOINTS', 'PRATOABERTO_API')
+
+
+# BLOCO LOGIN
+login_manager = flask_login.LoginManager()
+login_manager.init_app(app)
+
+# Our mock database.
+users = {'admin': {'password': 'secret'}}
+
+
+class User(flask_login.UserMixin):
+    pass
+
+
+@login_manager.user_loader
+def user_loader(email):
+    if email not in users:
+        return
+
+    user = User()
+    user.id = email
+    return user
+
+
+@login_manager.request_loader
+def request_loader(request):
+    email = request.form.get('email')
+    if email not in users:
+        return
+
+    user = User()
+    user.id = email
+
+    # DO NOT ever store passwords in plaintext and always compare password
+    # hashes using constant-time comparison!
+    user.is_authenticated = request.form['password'] == users[email]['password']
+
+    return user
+
+
+@app.route('/', methods=['GET', 'POST'])
+def login():
+    if request.method == 'GET':
+        return render_template('login.html')
+
+    email = request.form['username']
+    if email in users:
+        if request.form['password'] == users[email]['password']:
+            user = User()
+            user.id = email
+            flask_login.login_user(user)
+            return redirect(url_for('backlog'))
+
+    flash('Senha ou usuario nao identificados')
+    return render_template('login.html')
+
+
+@app.route('/logout')
+@flask_login.login_required
+def logout():
+    flask_login.logout_user()
+    return redirect(url_for('login'))
+
+
+@login_manager.unauthorized_handler
+def unauthorized_handler():
+    return 'Unauthorized'
 
 
 # BLOCO DE QUEBRA CARDÁPIOS
-@app.route("/", methods=["GET", "POST"])
+@app.route("/pendencias_publicacoes", methods=["GET", "POST"])
+@flask_login.login_required
 def backlog():
     if request.method == "GET":
         pendentes = get_pendencias()
@@ -40,6 +110,7 @@ def backlog():
 
 
 @app.route("/pendencias_deletadas", methods=["GET", "POST"])
+@flask_login.login_required
 def deletados():
     if request.method == "GET":
         deletados = get_deletados()
@@ -50,6 +121,7 @@ def deletados():
 
 
 @app.route("/pendencias_publicadas", methods=["GET", "POST"])
+@flask_login.login_required
 def publicados():
     if request.method == "GET":
         publicados = get_publicados()
@@ -61,6 +133,7 @@ def publicados():
 
 # BLOCO DE UPLOAD DE XML E CRIAÇÃO DAS TERCEIRIZADAS
 @app.route('/upload', methods=['POST'])
+@flask_login.login_required
 def upload_file():
     if 'file' not in request.files:
         flash('No file part')
@@ -126,6 +199,7 @@ def upload_file():
 
 
 @app.route('/cria_terceirizada', methods=['GET'])
+@flask_login.login_required
 def cria_terceirizada():
     if request.method == "GET":
         quebras = db_functions.select_quebras_terceirizadas()
@@ -142,6 +216,7 @@ def cria_terceirizada():
 
 
 @app.route('/upload_terceirizada', methods=['POST'])
+@flask_login.login_required
 def upload_terceirizadas():
     headers = {'Content-type': 'application/json'}
     data = request.form.get('json_dump', request.data)
@@ -210,6 +285,7 @@ def upload_terceirizadas():
 
 # BLOCO DE EDIÇÃO DOS CARDÁPIOS
 @app.route('/atualiza_cardapio', methods=['POST'])
+@flask_login.login_required
 def atualiza_cardapio():
     headers = {'Content-type': 'application/json'}
     data = request.form.get('json_dump', request.data)
@@ -223,6 +299,7 @@ def atualiza_cardapio():
 
 # comments = []
 @app.route("/calendario", methods=["GET"])
+@flask_login.login_required
 def calendario():
     args = request.args
     depara = db_functions.select_all()
@@ -307,6 +384,7 @@ def calendario():
 
 
 @app.route("/visualizador_cardapio", methods=["GET"])
+@flask_login.login_required
 def visualizador():
     args = request.args
     # Monta json
@@ -332,6 +410,7 @@ def visualizador():
 
 
 @app.route("/calendario_editor_grupo", methods=["POST"])
+@flask_login.login_required
 def calendario_grupo_cardapio():
     data = request.form.get('json_dump', request.data)
 
@@ -429,6 +508,7 @@ def calendario_grupo_cardapio():
 
 # BLOCO DE CONFIGURAÇÕES
 @app.route("/configuracoes_gerais", methods=['GET', 'POST'])
+@flask_login.login_required
 def config():
     if request.method == "GET":
         config_editor = db_functions.select_all()
@@ -436,6 +516,7 @@ def config():
 
 
 @app.route('/atualiza_configuracoes', methods=['POST'])
+@flask_login.login_required
 def atualiza_configuracoes():
     headers = {'Content-type': 'application/json'}
     data = request.form.get('json_dump', request.data)
@@ -451,6 +532,7 @@ def atualiza_configuracoes():
 
 
 @app.route("/configuracoes_cardapio", methods=['GET', 'POST'])
+@flask_login.login_required
 def config_cardapio():
     if request.method == "GET":
         config_editor = db_functions.select_all_receitas_terceirizadas()
@@ -458,6 +540,7 @@ def config_cardapio():
 
 
 @app.route('/atualiza_receitas', methods=['POST'])
+@flask_login.login_required
 def atualiza_config_cardapio():
     data = request.form.get('json_dump', request.data)
 
@@ -471,6 +554,7 @@ def atualiza_config_cardapio():
 
 
 @app.route('/escolas', methods=['GET'])
+@flask_login.login_required
 def escolas():
     if request.method == "GET":
         escolas = get_escolas()
@@ -478,6 +562,7 @@ def escolas():
 
 
 @app.route('/atualiza_historico_escolas', methods=['POST'])
+@flask_login.login_required
 def atualiza_historico_escolas():
     data = request.form.get('json_dump', request.data)
     jdata = json.loads(data)
@@ -608,6 +693,7 @@ def atualiza_historico_escolas():
 
 # BLOCO DE DOWNLOAD DAS PUBLICAÇÕES
 @app.route("/download_publicacao", methods=["GET", "POST"])
+@flask_login.login_required
 def publicacao():
     if request.method == "GET":
         return render_template("download_publicações.html", data_inicio_fim='disabled')
@@ -646,6 +732,7 @@ def publicacao():
 
 
 @app.route('/download_csv', methods=['POST'])
+@flask_login.login_required
 def download_csv():
     data_inicio_fim_str = request.form.get('datas', request.data)
     data_inicial = data_inicio_fim_str.split('-')[0]
@@ -686,6 +773,7 @@ def download_csv():
 
 # BLOCO MAPA DE PENDENCIAS
 @app.route('/mapa_pendencias', methods=['GET', 'POST'])
+@flask_login.login_required
 def mapa_pendencias():
     if request.method == "GET":
         mapa = get_quebras_escolas()
@@ -1097,4 +1185,4 @@ if __name__ == "__main__":
     db_setup.set()
     app.secret_key = os.urandom(12)
     app.config['UPLOAD_FOLDER'] = './tmp'
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=False, host='0.0.0.0', port=5000)

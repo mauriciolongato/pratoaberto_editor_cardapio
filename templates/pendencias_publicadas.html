@@ -90,7 +90,6 @@
                                     <li><a href="#" data-toggle="modal" data-target="#xml_form">DIRETA/MISTA/CONVENIADA</a></li>
                                     <li><a href="/cria_terceirizada">TERCEIRIZADAS</a></li>
                                     <li><a href="/escolas">ESCOLAS</a></li>
-                                    <li><a href="#">DISPONIBILIDADE DE REFEIÇÃO POR ESCOLA</a></li>
                                 </ul>
                             </li>
                             <li class="dropdown" style="padding-right: 7px">
@@ -102,6 +101,9 @@
                                     <li><a href="/configuracoes_cardapio">HISTÓRICO CARDÁPIOS TECEIRIZADAS</a></li>
                                     <li><a href="/mapa_pendencias">MAPA DE PENDÊNCIAS</a></li>
                                 </ul>
+                            </li>
+                            <li style="padding-right: 7px">
+                                <button class="btn btn-default" onclick="location.href='/logout';"><i class="glyphicon glyphicon-user" aria-hidden="true"></i> SAIR</button>
                             </li>
                         </ul>
                     </div>
@@ -134,7 +136,7 @@
         <!-- Informações do agrupamento -->
         <div class="row">
             <div style="text-align: left">
-                <a href="/" class="btn btn-lg btn-primary" >Cardápios Pendentes</a>
+                <a href="/pendencias_publicacoes" class="btn btn-lg btn-primary" >Cardápios Pendentes</a>
                 <a href="/pendencias_publicadas" class="btn btn-lg btn-default disabled">Cardápios Publicados</a>
                 <a href="/pendencias_deletadas" class="btn btn-lg btn-danger">Cardápios Deletados</a>
             </div>

@@ -362,8 +362,12 @@ def update_receitas_terceirizadas():
             if row_aux[5] == 'L4 - LANCHE 4 HORAS':
                 row_aux[5] = 'L - LANCHE'
 
-        modificacoes.append(row_aux)
+            # Adiciona CCI - Cópia CEI
+            row_aux_CCI = row_aux
+            row_aux_CCI[1] = 'CCI'
+            modificacoes.append(row_aux_CCI)
 
+        modificacoes.append(row_aux)
     modificacoes.sort()
     modificacoes = list(modificacoes for modificacoes, _ in itertools.groupby(modificacoes))
 

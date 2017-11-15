@@ -5,8 +5,6 @@ import db_functions
 import itertools
 
 
-# api = 'https://pratoaberto.tk/api'
-# api = 'http://pratoaberto.sme.prefeitura.sp.gov.br:8100'
 api = 'https://pratoaberto.sme.prefeitura.sp.gov.br/api'
 
 def dia_semana(dia):
@@ -349,12 +347,56 @@ def mapa_pendencias():
             print(str(1), row)
 
 
+def update_receitas_terceirizadas():
+    r = db_functions.select_all_receitas_terceirizadas()
+    modificacoes = []
+    for row in r:
+        row_aux = row[1:]
+        # Atualiza
+        if row_aux[1] == 'CEI':
+            row_aux = list(row_aux)
+            row_aux[1] = 'CEI_MUNICIPAL'
+            if row_aux[5] == 'R1 - REFEIÇÃO 1':
+                row_aux[5] = 'J - JANTAR'
+
+            if row_aux[5] == 'L4 - LANCHE 4 HORAS':
+                row_aux[5] = 'L - LANCHE'
+
+        modificacoes.append(row_aux)
+
+    modificacoes.sort()
+    modificacoes = list(modificacoes for modificacoes, _ in itertools.groupby(modificacoes))
+
+    db_functions.truncate_receitas_terceirizadas()
+    db_functions.add_bulk_cardapio(modificacoes)
+
+
 if __name__ == '__main__':
     # db_functions.truncate_receitas_terceirizadas()
     # open_csv()
     import json
 
-    post_ordenar_refeicoes()
+    update_receitas_terceirizadas()
+    #escolas = get_escolas()
+    #print(escolas[0].keys())
+    #print(escolas[0])
+    #tipo_unidades = set([x['tipo_unidade'] for x in escolas])
+    #for x in tipo_unidades:
+    #    print(x)
+
+    #nomes = set([(x['tipo_unidade'], x['nome']) for x in escolas])
+    #for x, nome in nomes:
+    #    if x in nome:
+    #        flag = True
+    #    else:
+    #        flag = False
+
+    #    print('{}, {}, {}'.format(flag, x, nome))
+
+    #for escola in escolas:
+    #    print(escola)
+
+    #post_ordenar_refeicoes()
     #quebras = get_quebras_escolas()
     #for row in quebras:
     #    print(row)

@@ -351,10 +351,10 @@ def update_receitas_terceirizadas():
     r = db_functions.select_all_receitas_terceirizadas()
     modificacoes = []
     for row in r:
-        row_aux = row[1:]
+        row_aux = list(row[1:])
         # Atualiza
         if row_aux[1] == 'CEI':
-            row_aux = list(row_aux)
+            # row_aux = list(row_aux)
             row_aux[1] = 'CEI_MUNICIPAL'
             if row_aux[5] == 'R1 - REFEIÇÃO 1':
                 row_aux[5] = 'J - JANTAR'

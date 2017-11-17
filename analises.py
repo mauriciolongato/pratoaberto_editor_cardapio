@@ -3,9 +3,13 @@ import datetime
 import collections
 import db_functions
 import itertools
+import configparser
 
 
-api = 'https://pratoaberto.sme.prefeitura.sp.gov.br/api'
+# BLOCO GET ENDPOINT E KEYS
+config = configparser.ConfigParser()
+config.read('config/integracao.conf')
+api = config.get('ENDPOINTS', 'PRATOABERTO_API')
 
 def dia_semana(dia):
     diasemana = ('Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom')
@@ -126,7 +130,6 @@ def get_escolas():
 
 
 def get_escola(cod_eol):
-    api = 'https://pratoaberto.sme.prefeitura.sp.gov.br/api'
     url = api + '/escola/{}'.format(cod_eol)
     r = requests.get(url)
     try:
@@ -139,7 +142,6 @@ def get_escola(cod_eol):
 
 def post_cardapio():
     escolas = get_escolas()
-    api = 'https://pratoaberto.sme.prefeitura.sp.gov.br/api'
     headers = {'Content-type': 'application/json'}
     count = 0
     for escola in escolas:
@@ -162,7 +164,6 @@ def post_cardapio():
 
 def post_idades_idades():
     escolas = get_escolas()
-    api = 'https://pratoaberto.sme.prefeitura.sp.gov.br/api'
     headers = {'Content-type': 'application/json'}
     count = 0
     dic_refeicoes = {
@@ -213,7 +214,6 @@ def post_idades_idades():
 
 def post_ordenar_refeicoes():
     escolas = get_escolas()
-    api = 'https://pratoaberto.sme.prefeitura.sp.gov.br/api'
     headers = {'Content-type': 'application/json'}
     count = 0
 
@@ -263,7 +263,6 @@ def post_cardapio_add_merendas():
                 refeicao_escola[data[0]] = []
                 refeicao_escola[data[0]].append(data[1])
 
-    api = 'https://pratoaberto.sme.prefeitura.sp.gov.br/api'
     headers = {'Content-type': 'application/json'}
     count = 0
     for _id in refeicao_escola.keys():
@@ -375,42 +374,23 @@ def update_receitas_terceirizadas():
     db_functions.add_bulk_cardapio(modificacoes)
 
 
+def get_cardapios():
+    url = api + '/editor/cardapios?status=PENDENTE&status=SALVO&status=PUBLICADO'
+    r = requests.get(url)
+    refeicoes = r.json()
+
+    for refeicao in refeicoes:
+        if refeicao['tipo_atendimento'] == 'TERCEIRIZADA':
+            if refeicao['tipo_unidade'] == 'CEI':
+                refeicao['tipo_unidade'] = 'CEI_MUNICIPAL'
+                print(refeicao['status'], refeicao)
+                headers = {'Content-type': 'application/json'}
+                data = json.dumps([refeicao])
+                res = requests.post(api + '/editor/cardapios', data=data, headers=headers)
+
 if __name__ == '__main__':
-    # db_functions.truncate_receitas_terceirizadas()
     # open_csv()
     import json
 
-    update_receitas_terceirizadas()
-    #escolas = get_escolas()
-    #print(escolas[0].keys())
-    #print(escolas[0])
-    #tipo_unidades = set([x['tipo_unidade'] for x in escolas])
-    #for x in tipo_unidades:
-    #    print(x)
+    get_cardapios()
 
-    #nomes = set([(x['tipo_unidade'], x['nome']) for x in escolas])
-    #for x, nome in nomes:
-    #    if x in nome:
-    #        flag = True
-    #    else:
-    #        flag = False
-
-    #    print('{}, {}, {}'.format(flag, x, nome))
-
-    #for escola in escolas:
-    #    print(escola)
-
-    #post_ordenar_refeicoes()
-    #quebras = get_quebras_escolas()
-    #for row in quebras:
-    #    print(row)
-
-    # post_cardapio_add_merendas()
-    # cod_eol = [91065, 19235, 90891]
-    # escolas_f = [x for x in escolas if x['_id'] in cod_eol]
-    # escolas_eol = set([x['_id'] for x in escolas])
-    # print(len(escolas_eol))
-    # print(escolas_eol)
-    # for cod_eol in ['19235']:
-    #     print(json.dumps(get_escola(str(cod_eol))['historico']))
-    #     print('\n')

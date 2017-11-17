@@ -1006,7 +1006,7 @@ def get_publicados():
 
 
 def get_escolas():
-    url = api + '/escolas?completo'
+    url = api + '/editor/escolas'
     r = requests.get(url)
     escolas = r.json()
 

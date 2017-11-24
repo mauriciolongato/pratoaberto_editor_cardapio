@@ -306,7 +306,7 @@ def atualiza_cardapio():
 def calendario():
     args = request.args
     depara = db_functions.select_all()
-    depara = [x[3:5] for x in depara if x[1] == 'TEMPEROS' and x[2] == 'INGREDIENTES']
+    depara = [x[3:5] for x in depara if x[2] == 'INGREDIENTES']
 
     # Monta json - Semana da requisicao
     jdata = get_cardapio(args)
@@ -437,7 +437,7 @@ def calendario_grupo_cardapio():
         return redirect(url_for('backlog'))
 
     depara = db_functions.select_all()
-    depara = [x[3:5] for x in depara if x[1] == 'TEMPEROS' and x[2] == 'INGREDIENTES']
+    depara = [x[3:5] for x in depara if x[2] == 'INGREDIENTES']
     cardapios = []
     for url in data:
         args = dict([tuple(x.split('=')) for x in url.split('?')[1].split('&')])

@@ -171,10 +171,11 @@ def upload_file():
                                 if _key not in responses:
                                     args = (api,
                                             data,
+                                            data,
                                             '&'.join(['%s=%s' % item for item in query.items()]),
                                             '&'.join(
                                                 ['status=%s' % item for item in ['PUBLICADO', 'SALVO', 'PENDENTE', 'DELETADO']]))
-                                    responses[_key] = requests.get('{}/editor/cardapios?data_inicial={}&{}&{}'.format(*args)).json()
+                                    responses[_key] = requests.get('{}/editor/cardapios?data_inicial={}&data_final={}&{}&{}'.format(*args)).json()
 
                                 cardapio = query
                                 cardapio['data'] = data

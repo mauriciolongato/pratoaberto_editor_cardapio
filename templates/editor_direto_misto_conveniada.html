@@ -263,7 +263,7 @@
         function substituir() {
             var lista_depara = {{ depara|tojson|safe }};
             $.each(lista_depara, function(index, value) {
-                var DE = value[0];
+                var DE = $.trim(value[0]);
                 var PARA = value[1];
                 $('#task-table tr').each(function() {
                     var ingredientes = $($(this).children('td')[4]).text();
